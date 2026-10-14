@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SwiftLint
+        run: brew install swiftlint
+      - name: SwiftLint
+        run: swiftlint lint --strict
+
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show Xcode version
+        run: xcodebuild -version
+      - name: Unit tests (Swift Package)
+        run: scripts/test.sh
+      - name: Build Example app
+        run: |
+          xcodebuild build \
+            -project Example/PdfSignatureExample.xcodeproj \
+            -scheme PdfSignatureExample \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO -quiet
+
+  podspec:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: pod lib lint
+        run: pod lib lint --allow-warnings --platforms=ios

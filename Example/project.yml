@@ -1,0 +1,46 @@
+# Generates PdfSignatureExample.xcodeproj. Run `xcodegen` inside Example/ after editing this file.
+name: PdfSignatureExample
+options:
+  bundleIdPrefix: io.github.fvory
+  deploymentTarget:
+    iOS: "14.0"
+  createIntermediateGroups: true
+
+packages:
+  PdfSignatureSDK:
+    path: ..
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "0.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+
+targets:
+  PdfSignatureExample:
+    type: application
+    platform: iOS
+    sources:
+      - PdfSignatureExample
+    dependencies:
+      - package: PdfSignatureSDK
+    info:
+      path: PdfSignatureExample/Info.plist
+      properties:
+        CFBundleDisplayName: PSDK Example
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.fvory.psdk.example
+        TARGETED_DEVICE_FAMILY: "1,2"

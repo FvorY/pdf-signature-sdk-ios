@@ -1,2 +1,88 @@
-# pdf-signature-sdk-ios
-Native iOS (Swift) PDF viewer SDK for placing signatures and E-Materai — port of pdf-signature-esign-sdk
+# PdfSignatureSDK for iOS
+
+[![CI](https://github.com/FvorY/pdf-signature-sdk-ios/actions/workflows/ci.yml/badge.svg)](https://github.com/FvorY/pdf-signature-sdk-ios/actions/workflows/ci.yml)
+![iOS 14+](https://img.shields.io/badge/iOS-14%2B-blue)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
+
+Native iOS (Swift) PDF viewer that lets users place, drag, resize and remove
+**signature** and **E-Materai** boxes on a document. Positions are returned in
+**PDF points**, exactly like the web SDK
+[`pdf-signature-esign-sdk`](https://www.npmjs.com/package/pdf-signature-esign-sdk) v1.1.2,
+so the same backend can complete the signing.
+
+> 🚧 **Work in progress.** The package skeleton is in place (milestone M0). The viewer API
+> described below lands in the next milestones and is not usable yet.
+
+Bahasa Indonesia: [README.id.md](README.id.md)
+
+## Features (planned for 1.0.0)
+
+- PDF rendering with PDFKit: lazy pages, pinch-zoom, pagination, thumbnails
+- Signature and E-Materai placement with drag, resize, delete and per-item locks
+- Same methods, events and JSON output as the web SDK
+- Password-protected PDFs
+- Light, dark and system themes; every UI string can be replaced
+- UIKit view plus a SwiftUI wrapper
+- No third-party dependencies
+
+## Requirements
+
+- iOS 14.0+
+- Xcode 16+ / Swift 5.9+
+
+## Installation
+
+### Swift Package Manager
+
+In Xcode choose **File → Add Package Dependencies…**, paste
+
+```
+https://github.com/FvorY/pdf-signature-sdk-ios
+```
+
+and select **Up to Next Major Version**. Or in `Package.swift`:
+
+```swift
+.package(url: "https://github.com/FvorY/pdf-signature-sdk-ios", from: "1.0.0")
+```
+
+### CocoaPods
+
+```ruby
+pod 'PdfSignatureSDK'
+```
+
+## Usage (preview of the 1.0.0 API)
+
+```swift
+import PdfSignatureSDK
+
+let viewer = PdfSignatureView(config: PsdkConfig(file: .file(pdfURL)))
+view.addSubview(viewer)
+
+viewer.on(.signaturePlaced) { event in print(event) }
+
+// Later, send the positions to your backend:
+let json = try JSONEncoder().encode(viewer.getSignatures())
+```
+
+Coordinates use the top-left corner of the page as origin, in PDF points
+(1/72 inch), and `x, y` is the top-left corner of the item, the same as the web SDK.
+
+## Project layout
+
+| Path | Contents |
+|---|---|
+| `Sources/PdfSignatureSDK` | The library |
+| `Tests/PdfSignatureSDKTests` | Unit tests |
+| `Example/` | Demo app (`project.yml` → generated `PdfSignatureExample.xcodeproj`) |
+| `parity/` | Fixtures that compare output with the web SDK |
+| `scripts/test.sh` | Runs the tests on the first available iPhone simulator |
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+[MIT](LICENSE)

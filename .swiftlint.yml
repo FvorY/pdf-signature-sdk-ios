@@ -1,0 +1,25 @@
+included:
+  - Sources
+  - Tests
+  - Example/PdfSignatureExample
+
+excluded:
+  - .build
+  - Example/PdfSignatureExample.xcodeproj
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - first_where
+  - closure_spacing
+  - sorted_imports
+
+line_length:
+  warning: 140
+  error: 200
+
+identifier_name:
+  excluded: [id, x, y, ok]
+
+type_body_length:
+  warning: 400

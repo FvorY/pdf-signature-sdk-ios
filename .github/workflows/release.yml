@@ -1,0 +1,31 @@
+name: Release
+
+# Runs when a semver tag (e.g. 1.0.0) is pushed. SPM picks the tag up by itself;
+# this workflow re-runs the checks and creates the GitHub Release.
+on:
+  push:
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check versions match the tag
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          grep -q "s.version          = '${TAG}'" PdfSignatureSDK.podspec || { echo "podspec version != ${TAG}"; exit 1; }
+          grep -q "version = \"${TAG}\"" Sources/PdfSignatureSDK/PdfSignatureSDK.swift || { echo "PdfSignatureSDK.version != ${TAG}"; exit 1; }
+      - name: Unit tests
+        run: scripts/test.sh
+      - name: pod lib lint
+        run: pod lib lint --allow-warnings --platforms=ios
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --generate-notes
+      # CocoaPods publishing (pod trunk push) is done manually by the pod owner;
+      # see CONTRIBUTING.md.

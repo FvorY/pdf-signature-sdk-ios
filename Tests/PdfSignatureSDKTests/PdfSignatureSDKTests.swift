@@ -15,4 +15,48 @@ final class PdfSignatureSDKTests: XCTestCase {
     func testPrivacyManifestIsBundled() {
         XCTAssertNotNil(Bundle.module.url(forResource: "PrivacyInfo", withExtension: "xcprivacy"))
     }
+
+    func testRemoteTransportIsSecureByDefault() {
+        let config = PsdkConfig()
+        XCTAssertFalse(config.allowInsecureHttp)
+        XCTAssertEqual(config.theme, .system)
+        XCTAssertFalse(config.disabled)
+    }
+
+    func testWebParityConfigurationSurface() {
+        let option = PickerOption(id: "director", label: "Director", group: "Internal")
+        let config = PsdkConfig(
+            labels: .indonesian,
+            signatureOptions: [option],
+            estampOptions: [PickerOption(id: "stamp")],
+            groupByCategory: true,
+            disabled: true,
+            disableDragging: true,
+            ui: PsdkUiConfig(thumbnails: false)
+        )
+
+        XCTAssertEqual(config.labels.signatureBtn, "Tambah Tanda Tangan")
+        XCTAssertEqual(config.signatureOptions.first?.group, "Internal")
+        XCTAssertTrue(config.groupByCategory)
+        XCTAssertTrue(config.disabled)
+        XCTAssertTrue(config.disableDragging)
+        XCTAssertFalse(config.ui.thumbnails)
+    }
+
+    func testSignatureItemCoordinatesRemainTopLeftPdfPoints() throws {
+        let item = SignatureItem(
+            id: "sig-1",
+            type: .signature,
+            x: 12,
+            y: 34,
+            page: 2,
+            label: "Director",
+            width: 160,
+            height: 48
+        )
+        XCTAssertEqual(item.yFromBottom(pageHeight: 800), 718)
+        let data = try JSONEncoder().encode(item)
+        let decoded = try JSONDecoder().decode(SignatureItem.self, from: data)
+        XCTAssertEqual(decoded, item)
+    }
 }

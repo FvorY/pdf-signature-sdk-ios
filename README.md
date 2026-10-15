@@ -10,18 +10,20 @@ Native iOS (Swift) PDF viewer that lets users place, drag, resize and remove
 [`pdf-signature-esign-sdk`](https://www.npmjs.com/package/pdf-signature-esign-sdk) v1.1.2,
 so the same backend can complete the signing.
 
-> 🚧 **Work in progress.** The package skeleton is in place (milestone M0). The viewer API
-> described below lands in the next milestones and is not usable yet.
+> 🚧 **Preview.** The native viewer is usable and the public API is under stabilization; it is not
+> yet a 1.0.0 release.
 
 Bahasa Indonesia: [README.id.md](README.id.md)
 
-## Features (planned for 1.0.0)
+Full API guide: [DOCUMENTATION.id.md](DOCUMENTATION.id.md)
 
-- PDF rendering with PDFKit: lazy pages, pinch-zoom, pagination, thumbnails
+## Features
+
+- PDF rendering with PDFKit, pagination, zoom, page fitting and page rendering
 - Signature and E-Materai placement with drag, resize, delete and per-item locks
-- Same methods, events and JSON output as the web SDK
+- Web-parity methods, events, JSON output, picker options and skeleton overlay
 - Password-protected PDFs
-- Light, dark and system themes; every UI string can be replaced
+- Light, dark and system theme preference; configurable labels and UI locks
 - UIKit view plus a SwiftUI wrapper
 - No third-party dependencies
 
@@ -49,10 +51,10 @@ and select **Up to Next Major Version**. Or in `Package.swift`:
 ### CocoaPods
 
 ```ruby
-pod 'PdfSignatureSDK'
+pod 'PdfSignatureSDK', :git => 'https://github.com/FvorY/pdf-signature-sdk-ios.git'
 ```
 
-## Usage (preview of the 1.0.0 API)
+## Usage
 
 ```swift
 import PdfSignatureSDK
@@ -68,6 +70,16 @@ let json = try JSONEncoder().encode(viewer.getSignatures())
 
 Coordinates use the top-left corner of the page as origin, in PDF points
 (1/72 inch), and `x, y` is the top-left corner of the item, the same as the web SDK.
+
+See [DOCUMENTATION.id.md](DOCUMENTATION.id.md) for UIKit integration, all public APIs,
+events, password-protected PDFs, configuration, and backend payload examples.
+
+### Remote source security
+
+Remote PDF URLs require HTTPS by default. For a trusted legacy HTTP endpoint only, opt in
+explicitly with `PsdkConfig(allowInsecureHttp: true)`. Redirects are revalidated and the SDK caps
+PDF input at 100 MiB. Signature placement returns coordinates; cryptographic signing and document
+integrity must still be enforced by the backend.
 
 ## Project layout
 

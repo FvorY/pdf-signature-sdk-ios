@@ -2,7 +2,7 @@ import Foundation
 
 /// Entry point and metadata for the PdfSignatureSDK module.
 ///
-/// The viewer itself (`PdfSignatureView`) is added in milestone M1.
+/// The native viewer is available as a preview API while the SDK is completed toward 1.0.0.
 public enum PdfSignatureSDK {
     /// Semantic version of this SDK. Kept in sync with the git tag and the podspec.
     public static let version = "0.0.0"

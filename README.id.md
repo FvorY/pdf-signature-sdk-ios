@@ -66,6 +66,8 @@ pod 'PdfSignatureSDK', :git => 'https://github.com/FvorY/pdf-signature-sdk-ios.g
 
 ## Mulai cepat: UIKit
 
+Di contoh, `pdfURL` dan `pdfData` mewakili nilai milikmu sendiri; selebihnya adalah API SDK.
+
 `PdfSignatureView` adalah `UIView`, jadi bisa langsung ditambahkan ke screen UIKit:
 
 ```swift
@@ -163,7 +165,7 @@ memiliki `yFromBottom(pageHeight)` untuk library PDF yang memakai titik awal kir
 ```swift
 let subscription = viewer.on(.signaturePlaced) { event in
     if case let .signaturePlaced(item) = event {
-        sendToBackend(item)
+        print(item) // kirim ini ke backend
     }
 }
 
@@ -187,7 +189,9 @@ Untuk PDF berpassword, gunakan dialog bawaan atau tangani event sendiri:
 ```swift
 viewer.on(.passwordRequested) { event in
     if case let .passwordRequested(request) = event {
-        request.updatePassword(passwordFromYourUI)
+        // Tampilkan dialog sendiri, lalu jawab:
+        request.updatePassword("test123") // teks yang diketik user
+        // request.cancel()               // atau user menyerah
     }
 }
 ```

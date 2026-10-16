@@ -8,6 +8,10 @@ satu backend bisa menyelesaikan tanda tangan untuk web, Android, dan iOS.
 [Panduan SDK Android](https://github.com/FvorY/pdf-signature-sdk-android/blob/main/DOCUMENTATION.id.md)
 memakai bagian yang sama. English: [DOCUMENTATION.en.md](DOCUMENTATION.en.md).
 
+> **Tentang contoh kode.** Semua yang tampil adalah API SDK, kecuali nilai yang mewakili datamu
+> sendiri: `pdfURL`, `pdfData`, dan nama gambar seperti `"director-signature"`. Kodenya sama di panduan Inggris dan Indonesia; hanya komentar dan teks dalam
+> tanda kutip yang berbeda.
+
 1. [Persyaratan dan instalasi](#1-persyaratan-dan-instalasi)
 2. [Menampilkan viewer](#2-menampilkan-viewer)
 3. [Sumber PDF](#3-sumber-pdf)
@@ -123,7 +127,7 @@ dibuang bila host berubah, dan ukurannya dibatasi 100 MiB (PDF) serta 10 MiB (ga
 ```swift
 let signatureID = try viewer.placeSignature(PlaceOptions(
     x: 72, y: 680, page: 1, label: "Direktur",
-    image: .url(URL(string: "https://example.com/ttd.png")!), width: 140
+    image: .url(URL(string: "https://example.com/signature.png")!), width: 140
 ))
 let stampID = try viewer.placeEStamp(PlaceOptions(x: 420, y: 700, page: 1))
 ```
@@ -163,7 +167,7 @@ Tombol tambah dan picker di UI bawaan dijelaskan di §10.
 
 ```swift
 let items: [SignatureItem] = viewer.getSignatures()
-let diHalaman2 = viewer.getSignaturesByPage(2)
+let onPage2 = viewer.getSignaturesByPage(2)
 let json = try JSONEncoder().encode(items) // field sama dengan web SDK
 ```
 
@@ -179,7 +183,9 @@ mengukur dari pojok kiri-bawah. `removeSignature(id)` dan `clearSignatures()` me
 
 ```swift
 let subscription = viewer.on(.signaturePlaced) { event in
-    if case let .signaturePlaced(item) = event { kirim(item) }
+    if case let .signaturePlaced(item) = event {
+        print(item) // kirim ini ke backend
+    }
 }
 viewer.once(.documentLoaded) { event in print(event) }
 viewer.off(subscription)
@@ -225,7 +231,9 @@ ui.passwordDialog = false
 let viewer = PdfSignatureView(config: PsdkConfig(ui: ui))
 viewer.on(.passwordRequested) { event in
     guard case let .passwordRequested(request) = event else { return }
-    tampilkanDialog(salah: request.isIncorrect, onOK: request.updatePassword, onBatal: request.cancel)
+    // Tampilkan dialog sendiri (request.isIncorrect bernilai true setelah password salah), lalu jawab:
+    request.updatePassword("test123") // teks yang diketik user
+    // request.cancel()               // atau user menyerah
 }
 ```
 
@@ -269,11 +277,11 @@ atau menampilkan daftar bila opsi diisi:
 ```swift
 PsdkConfig(
     signatureOptions: [
-        PickerOption(id: "direktur", label: "Direktur", image: .image(ttdDirektur), group: "Internal"),
-        PickerOption(id: "klien", label: "Klien", group: "Eksternal")
+        PickerOption(id: "director", label: "Director", image: .image(UIImage(named: "director-signature")!), group: "Internal"),
+        PickerOption(id: "client", label: "Client", group: "External")
     ],
-    estampOptions: [PickerOption(id: "materai-10000", label: "Materai 10.000")],
-    groupByCategory: true // "Grup · opsi"; opsi tanpa grup masuk labels.defaultGroup
+    estampOptions: [PickerOption(id: "stamp-10000", label: "E-Materai 10,000")],
+    groupByCategory: true // "Group · option"; options without a group go under labels.defaultGroup
 )
 ```
 
@@ -307,9 +315,12 @@ Tombol upload (`topbar.upload`) membuka picker Files untuk PDF. `onUpload` menen
 terjadi dengan file pilihan:
 
 ```swift
-PsdkConfig(onUpload: { dipilih in
-    guard await diizinkan(dipilih) else { return .cancel }
-    return .proceed // atau .replace(sumberLain)
+PsdkConfig(onUpload: { picked in
+    // Contoh: hanya terima file sampai 20 MB
+    guard case let .file(url) = picked,
+          let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+          size <= 20_000_000 else { return .cancel }
+    return .proceed // atau buka dokumen lain: .replace(.bundle(name: "other.pdf"))
 })
 ```
 
@@ -326,8 +337,8 @@ viewer.showSkeleton(false)
 ## 14. Gambar halaman
 
 ```swift
-let halaman: UIImage? = await viewer.renderPage(1, scale: 2)                // piksel per PDF point
-let denganItem: UIImage? = await viewer.renderPageWithOverlay(1, scale: 2)  // item digambar di atasnya
+let page: UIImage? = await viewer.renderPage(1, scale: 2)               // piksel per PDF point
+let withItems: UIImage? = await viewer.renderPageWithOverlay(1, scale: 2) // item digambar di atasnya
 ```
 
 Berguna untuk pratinjau atau layar konfirmasi. Gambar mengikuti /Rotate seperti viewer.
@@ -401,8 +412,8 @@ Selebihnya (koordinat, JSON, event, opsi, UI bawaan) sama.
 ## 20. Build dari source
 
 ```bash
-scripts/test.sh           # unit test, termasuk fixture paritas web SDK
-scripts/test.sh example   # UI test Example app: geser, hapus, scroll, toolbar, menu
+scripts/test.sh           # unit tests, including the web SDK parity fixtures
+scripts/test.sh example   # Example app UI tests: drag, delete, scrolling, toolbar, menu
 ```
 
 `Example/` adalah aplikasi demo (generate project dengan `xcodegen` di dalam `Example/`), dan

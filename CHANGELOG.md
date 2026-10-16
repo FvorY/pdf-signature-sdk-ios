@@ -14,5 +14,6 @@ project uses [Semantic Versioning](https://semver.org/).
 - Asynchronous signature/E-Materai image loading from URL, Base64 or `UIImage`, including automatic
   height adjustment and `signatureMoved` parity behavior.
 - CocoaPods podspec.
+- English and Indonesian usage guides (`DOCUMENTATION.en.md`, `DOCUMENTATION.id.md`).
 - Example app generated with XcodeGen.
 - GitHub Actions: SwiftLint, unit tests, Example build, `pod lib lint`, tag release.

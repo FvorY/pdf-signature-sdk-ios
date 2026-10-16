@@ -15,7 +15,7 @@ so the same backend can complete the signing.
 
 Bahasa Indonesia: [README.id.md](README.id.md)
 
-Full API guide: [DOCUMENTATION.id.md](DOCUMENTATION.id.md)
+Documentation: [DOCUMENTATION.en.md](DOCUMENTATION.en.md) · [Dokumentasi Bahasa Indonesia](DOCUMENTATION.id.md)
 
 ## Features
 
@@ -23,7 +23,7 @@ Full API guide: [DOCUMENTATION.id.md](DOCUMENTATION.id.md)
 - Signature and E-Materai placement with drag, resize, delete and per-item locks
 - Web-parity methods, events, JSON output, picker options and skeleton overlay
 - Password-protected PDFs
-- Light, dark and system theme preference; configurable labels and UI locks
+- Configurable labels, item locks and secure screen (theme, colors and toolbar options are not applied yet)
 - UIKit view plus a SwiftUI wrapper
 - No third-party dependencies
 
@@ -42,10 +42,10 @@ In Xcode choose **File → Add Package Dependencies…**, paste
 https://github.com/FvorY/pdf-signature-sdk-ios
 ```
 
-and select **Up to Next Major Version**. Or in `Package.swift`:
+and choose **Branch: main** (there is no release tag yet). Or in `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/FvorY/pdf-signature-sdk-ios", from: "1.0.0")
+.package(url: "https://github.com/FvorY/pdf-signature-sdk-ios", branch: "main")
 ```
 
 ### CocoaPods
@@ -71,7 +71,7 @@ let json = try JSONEncoder().encode(viewer.getSignatures())
 Coordinates use the top-left corner of the page as origin, in PDF points
 (1/72 inch), and `x, y` is the top-left corner of the item, the same as the web SDK.
 
-See [DOCUMENTATION.id.md](DOCUMENTATION.id.md) for UIKit integration, all public APIs,
+See [DOCUMENTATION.en.md](DOCUMENTATION.en.md) for UIKit integration, all public APIs,
 events, password-protected PDFs, configuration, and backend payload examples.
 
 ### Remote source security
@@ -90,6 +90,12 @@ integrity must still be enforced by the backend.
 | `Example/` | Demo app (`project.yml` → generated `PdfSignatureExample.xcodeproj`) |
 | `parity/` | Fixtures that compare output with the web SDK |
 | `scripts/test.sh` | Runs the tests on the first available iPhone simulator |
+
+## Running tests
+
+```bash
+scripts/test.sh
+```
 
 ## Contributing
 

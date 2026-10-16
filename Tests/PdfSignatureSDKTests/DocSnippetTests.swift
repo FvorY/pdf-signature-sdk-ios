@@ -36,8 +36,9 @@ final class DocSnippetTests: XCTestCase {
         ui.passwordDialog = false
         viewer.on(.passwordRequested) { event in
             guard case let .passwordRequested(request) = event else { return }
-            let actions: [() -> Void] = [{ request.updatePassword("x") }, request.cancel]
-            _ = (request.isIncorrect, actions)
+            _ = request.isIncorrect
+            request.updatePassword("test123") // the text the user typed
+            // request.cancel()               // or the user gave up
         }
 
         // §10
@@ -73,8 +74,10 @@ final class DocSnippetTests: XCTestCase {
 
         // §12
         _ = PsdkConfig(onUpload: { picked in
-            if case .remote = picked { return .cancel }
-            return .proceed
+            guard case let .file(url) = picked,
+                  let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+                  size <= 20_000_000 else { return .cancel }
+            return .proceed // or open another document instead: .replace(.bundle(name: "other.pdf"))
         })
 
         // §13, §14

@@ -8,6 +8,10 @@ backend can complete the signing for web, Android and iOS.
 The Android SDK's [guide](https://github.com/FvorY/pdf-signature-sdk-android/blob/main/DOCUMENTATION.en.md)
 has the same sections. Bahasa Indonesia: [DOCUMENTATION.id.md](DOCUMENTATION.id.md).
 
+> **About the code samples.** Everything you see is SDK API except values that stand for your own
+> data: `pdfURL`, `pdfData`, and image names such as `"director-signature"`.
+> The code is the same in the English and Indonesian guides; only comments and texts in quotes differ.
+
 1. [Requirements and installation](#1-requirements-and-installation)
 2. [Showing the viewer](#2-showing-the-viewer)
 3. [PDF sources](#3-pdf-sources)
@@ -110,7 +114,7 @@ nearest view controller, so it must be inside one.
 ```swift
 .file(url)                                   // local file, read off the main thread
 .data(pdfData)
-.bundle(name: "example.pdf")                 // app bundle (or bundle: someBundle)
+.bundle(name: "example.pdf")                 // app bundle; `bundle:` picks another Bundle
 .remote(url, headers: ["Authorization": "Bearer …"])
 ```
 
@@ -178,7 +182,9 @@ from the bottom-left corner. `removeSignature(id)` and `clearSignatures()` remov
 
 ```swift
 let subscription = viewer.on(.signaturePlaced) { event in
-    if case let .signaturePlaced(item) = event { send(item) }
+    if case let .signaturePlaced(item) = event {
+        print(item) // send this to your backend
+    }
 }
 viewer.once(.documentLoaded) { event in print(event) }
 viewer.off(subscription)
@@ -224,7 +230,9 @@ ui.passwordDialog = false
 let viewer = PdfSignatureView(config: PsdkConfig(ui: ui))
 viewer.on(.passwordRequested) { event in
     guard case let .passwordRequested(request) = event else { return }
-    showMyDialog(wrong: request.isIncorrect, onOK: request.updatePassword, onCancel: request.cancel)
+    // Show your own dialog (request.isIncorrect is true after a wrong password), then answer it:
+    request.updatePassword("test123") // the text the user typed
+    // request.cancel()               // or the user gave up
 }
 ```
 
@@ -267,7 +275,7 @@ or show a list when options are given:
 ```swift
 PsdkConfig(
     signatureOptions: [
-        PickerOption(id: "director", label: "Director", image: .image(directorSignature), group: "Internal"),
+        PickerOption(id: "director", label: "Director", image: .image(UIImage(named: "director-signature")!), group: "Internal"),
         PickerOption(id: "client", label: "Client", group: "External")
     ],
     estampOptions: [PickerOption(id: "stamp-10000", label: "E-Materai 10,000")],
@@ -306,8 +314,11 @@ happens with the chosen file:
 
 ```swift
 PsdkConfig(onUpload: { picked in
-    guard await isAllowed(picked) else { return .cancel }
-    return .proceed // or .replace(otherSource)
+    // Example: only accept files up to 20 MB
+    guard case let .file(url) = picked,
+          let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+          size <= 20_000_000 else { return .cancel }
+    return .proceed // or open another document instead: .replace(.bundle(name: "other.pdf"))
 })
 ```
 

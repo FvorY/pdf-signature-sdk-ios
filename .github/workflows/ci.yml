@@ -27,17 +27,12 @@ jobs:
         run: xcodebuild -version
       - name: Unit tests (Swift Package)
         run: scripts/test.sh
-      - name: Build Example app
-        run: |
-          xcodebuild build \
-            -project Example/PdfSignatureExample.xcodeproj \
-            -scheme PdfSignatureExample \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO -quiet
+      - name: Example app UI tests
+        run: scripts/test.sh example
 
   podspec:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - name: pod lib lint
-        run: pod lib lint --allow-warnings --platforms=ios
+        run: pod lib lint --platforms=ios

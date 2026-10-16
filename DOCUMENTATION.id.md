@@ -5,7 +5,7 @@ Dokumen ini menjelaskan pemasangan dan penggunaan `PdfSignatureSDK` di aplikasi 
 ## Fitur
 
 - Menampilkan PDF dari file lokal, `Data`, bundle aplikasi, atau URL remote HTTPS.
-- Menampilkan dokumen multi-halaman dengan pagination, thumbnail, zoom, fit-to-screen, dan fit-to-width.
+- Menampilkan dokumen multi-halaman dengan pagination, zoom, fit-to-screen, dan fit-to-width.
 - Menambahkan kotak tanda tangan pada halaman tertentu.
 - Menambahkan kotak E-Materai pada halaman tertentu.
 - Menggeser, resize, menghapus, atau mengunci item.
@@ -14,21 +14,23 @@ Dokumen ini menjelaskan pemasangan dan penggunaan `PdfSignatureSDK` di aplikasi 
 - Mendukung PDF yang dilindungi password.
 - Menampilkan skeleton/loading overlay saat aplikasi memproses upload atau signing.
 - Menyediakan event untuk document loaded, perubahan halaman, item ditempatkan/digeser/dihapus, dan permintaan password.
-- Menyediakan konfigurasi tema, label bahasa, warna, typography, toolbar, accessibility, haptic, dan secure screen.
+- Menyediakan konfigurasi label bahasa, kunci item, skala awal, dan secure screen.
 - Dapat dipakai langsung di UIKit melalui `UIView`, atau di SwiftUI melalui `PdfSignatureViewer`.
 
 ## Persyaratan
 
-- iOS 14 atau lebih baru
-- Xcode 16 atau lebih baru
-- Swift 5.9 atau lebih baru
-- Framework Apple: `UIKit` dan `PDFKit`
+| | Minimum | Catatan |
+|---|---|---|
+| iOS | 14.0 | |
+| Xcode / Swift | 16 / 5.9 | |
+| Instalasi | Swift Package Manager atau CocoaPods | Keduanya dicek di CI (`pod lib lint`, Example app). |
+| Dependensi | tidak ada | Hanya `UIKit`, `PDFKit`, dan `Combine` dari Apple. |
 
 ## Instalasi
 
 ### Swift Package Manager
 
-Di Xcode pilih **File → Add Package Dependencies…**, lalu masukkan:
+Di Xcode pilih **File → Add Package Dependencies…**, masukkan URL berikut, lalu pilih aturan **Branch: main**:
 
 ```text
 https://github.com/FvorY/pdf-signature-sdk-ios
@@ -40,7 +42,7 @@ Atau di `Package.swift`:
 dependencies: [
     .package(
         url: "https://github.com/FvorY/pdf-signature-sdk-ios",
-        from: "0.0.0"
+        branch: "main"
     )
 ]
 ```
@@ -61,7 +63,7 @@ pod install
 
 Buka file `.xcworkspace`, bukan `.xcodeproj`.
 
-Versi saat ini masih preview (`0.0.0`).
+Versi saat ini masih preview (`0.0.0`) dan belum ada tag rilis, jadi gunakan branch `main`.
 
 ## UIKit
 
@@ -89,9 +91,9 @@ final class PdfViewController: UIViewController {
 
         Task {
             do {
-                try await viewer.loadDocument(.file(url: pdfURL))
+                try await viewer.loadDocument(.file(pdfURL))
             } catch {
-                print("Gagal membuka PDF: \\(error)")
+                print("Gagal membuka PDF: \(error)")
             }
         }
     }
@@ -130,12 +132,18 @@ let stampID = try viewer.placeEStamp(PlaceOptions(
     x: 300,
     y: 120,
     page: 1,
-    label: "Materai 10.000",
     width: 80,
     height: 80,
     locked: true
 ))
 ```
+
+Jika `x` dan `y` tidak diisi keduanya, item ditaruh di tengah halaman dengan ukuran default
+(160 × 48 untuk tanda tangan, 80 × 80 untuk E-Materai), sama seperti web SDK.
+
+Di layar, geser item untuk memindahkan, tarik pegangan di pojok kanan-bawah untuk resize, dan tap
+tombol di pojok kanan-atas untuk menghapus. Sentuhan di luar item tetap men-scroll dan zoom PDF.
+VoiceOver membacakan tiap item dan menyediakan aksi Delete.
 
 Untuk membuka picker bawaan:
 
@@ -150,7 +158,7 @@ Opsi `PlaceOptions` yang penting:
 |---|---|
 | `x`, `y` | Posisi kiri-atas dalam PDF point |
 | `page` | Nomor halaman, dimulai dari 1 |
-| `label` | Label item yang ditampilkan |
+| `label` | Label tanda tangan (default `"Signature"`). E-Materai selalu berlabel `"E-Materai"`, sama seperti web SDK |
 | `image` | Gambar tanda tangan atau E-Materai |
 | `width`, `height` | Ukuran dalam PDF point |
 | `disableDrag` / `disableDragging` | Mencegah item digeser |
@@ -169,7 +177,7 @@ Contoh item:
 
 ```json
 {
-  "id": "signature-...",
+  "id": "signature-1760600000000-1",
   "type": "signature",
   "x": 80,
   "y": 120,
@@ -177,6 +185,9 @@ Contoh item:
   "label": "Direktur",
   "width": 160,
   "height": 48,
+  "disableDrag": false,
+  "disableDragging": false,
+  "disableResize": false,
   "locked": false
 }
 ```
@@ -189,29 +200,31 @@ Koordinat menggunakan sistem berikut:
 - nomor halaman dimulai dari 1;
 - ukuran A4 portrait umumnya `595 × 842` point.
 
+`yFromBottom(pageHeight:)` mengubah `y` untuk library PDF yang memakai origin kiri-bawah.
+
 ## Event
 
 ```swift
 viewer.on(.documentLoaded) { event in
     if case let .documentLoaded(totalPages) = event {
-        print("Total halaman: \\(totalPages)")
+        print("Total halaman: \(totalPages)")
     }
 }
 
 viewer.on(.signaturePlaced) { event in
     if case let .signaturePlaced(item) = event {
-        print("Signature ditempatkan: \\(item.id)")
+        print("Signature ditempatkan: \(item.id)")
     }
 }
 
 viewer.on(.signatureMoved) { event in
-    print("Posisi item berubah: \\(event)")
+    print("Posisi item berubah: \(event)")
 }
 ```
 
 Event yang tersedia: `documentLoaded`, `pageChanged`, `signaturePlaced`, `eStampPlaced`, `signatureMoved`, `signatureRemoved`, `signaturesCleared`, dan `passwordRequested`.
 
-Alternatifnya, gunakan `eventsPublisher` dengan Combine.
+`on` dan `once` mengembalikan `PsdkSubscription`; berikan ke `off` untuk berhenti mendengarkan. Dengan Combine, gunakan `eventsPublisher`.
 
 ## Halaman, zoom, dan lifecycle
 
@@ -231,6 +244,7 @@ viewer.removeSignature(signatureID)
 viewer.clearSignatures()
 ```
 
+Zoom yang didukung 0,25 sampai 4,0. Tanpa `PsdkConfig(scale:)`, lebar halaman menyesuaikan view.
 Panggil `destroy()` saat view tidak lagi digunakan.
 
 ## PDF password
@@ -262,19 +276,26 @@ viewer.on(.passwordRequested) { event in
 ```swift
 let config = PsdkConfig(
     file: .file(pdfURL),
-    theme: .system,
     labels: .indonesian,
-    ui: PsdkUiConfig(
-        upload: false,
-        signature: true,
-        eStamp: true,
-        thumbnails: true,
-        passwordDialog: true
-    ),
-    secureScreen: true,
-    logLevel: .error
+    disableResize: true,
+    secureScreen: true
 )
 ```
+
+Ubah konfigurasi setelah view dibuat:
+
+```swift
+viewer.updateConfig { $0.disabled = true }
+```
+
+`secureScreen: true` menutupi isi viewer saat layar sedang direkam atau di-mirror
+(`UIScreen.isCaptured`). iOS tidak menyediakan cara untuk memblokir screenshot biasa.
+
+Opsi berikut sudah ada di `PsdkConfig` tetapi **belum diterapkan** oleh viewer iOS versi preview:
+`theme`, `colors`, `typography`, `ui` (toolbar, thumbnail, haptic, dialog password bawaan),
+`estampKeepAspectRatio`, `logLevel`, dan `onUpload`. Judul picker memakai `labels`; `label` item
+yang ditaruh tidak (lihat di atas).
+Karena itu, tangani event `passwordRequested` sendiri seperti contoh di atas.
 
 URL PDF remote harus HTTPS secara default. HTTP hanya dapat diaktifkan secara eksplisit:
 
@@ -302,6 +323,9 @@ struct PdfScreen: View {
 }
 ```
 
+`PdfSignatureController` mem-publish `currentPage`, `totalPages`, `currentScale`, dan `signatures`,
+serta menyediakan `PdfSignatureView` di `controller.view`.
+
 ## Batasan
 
 SDK mengatur tampilan dan posisi item. SDK tidak melakukan:
@@ -316,7 +340,8 @@ Validasi identitas, koordinat, integritas dokumen, dan proses kriptografis tetap
 ## Menjalankan test dari source
 
 ```bash
-scripts/test.sh
+scripts/test.sh           # unit test, termasuk fixture paritas web SDK
+scripts/test.sh example   # UI test Example app: geser, hapus, scroll
 ```
 
 Lisensi: MIT.

@@ -19,7 +19,8 @@ line_length:
   error: 200
 
 identifier_name:
-  excluded: [id, x, y, ok]
+  # Short names that match the web SDK API (`ui`) or geometry (`dx`, `w`)
+  excluded: [id, x, y, ok, ui, dx, dy, w, h]
 
 type_body_length:
   warning: 400

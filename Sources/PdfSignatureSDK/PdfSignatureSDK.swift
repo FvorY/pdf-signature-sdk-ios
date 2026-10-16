@@ -9,4 +9,17 @@ public enum PdfSignatureSDK {
 
     /// Version of the web SDK (`pdf-signature-esign-sdk`) whose behavior this SDK mirrors.
     public static let webParityVersion = "1.1.2"
+
+    /// Bundle with the SDK's resources (privacy manifest): `Bundle.module` with Swift Package
+    /// Manager, the `PdfSignatureSDK.bundle` resource bundle with CocoaPods.
+    static var resourceBundle: Bundle {
+        #if SWIFT_PACKAGE
+        return .module
+        #else
+        let framework = Bundle(for: BundleToken.self)
+        return framework.url(forResource: "PdfSignatureSDK", withExtension: "bundle").flatMap(Bundle.init(url:)) ?? framework
+        #endif
+    }
 }
+
+private final class BundleToken {}

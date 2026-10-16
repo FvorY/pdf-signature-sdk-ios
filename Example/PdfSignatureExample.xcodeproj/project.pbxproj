@@ -9,12 +9,27 @@
 /* Begin PBXBuildFile section */
 		7AFAFA3F6560F2852EE75CCE /* PdfSignatureSDK in Frameworks */ = {isa = PBXBuildFile; productRef = DC5B621C858638D11210519E /* PdfSignatureSDK */; };
 		8EE5C2E3B67D3D981C130714 /* PdfSignatureExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41444337F8EC09F249CB2034 /* PdfSignatureExampleApp.swift */; };
+		A5116E5ED156F25100D9DBC0 /* OverlayUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C8DF7AD544A40A2C30A8C7D /* OverlayUITests.swift */; };
+		FE79AF58A2C65320AC1912F9 /* sample.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 8A8348D2CADBFF4F4409E3C3 /* sample.pdf */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C36B3C80F64BBE4ACFBF52AC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0302D09E79FE8D783417AD08 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E76ACD251F1067469F97B0C1;
+			remoteInfo = PdfSignatureExample;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		13F6AB498D1D6AE2D034151C /* PdfSignatureExample.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PdfSignatureExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3C8DF7AD544A40A2C30A8C7D /* OverlayUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayUITests.swift; sourceTree = "<group>"; };
 		41444337F8EC09F249CB2034 /* PdfSignatureExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PdfSignatureExampleApp.swift; sourceTree = "<group>"; };
 		62AACFAEE55BE341DC2661D4 /* pdf-signature-sdk-ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "pdf-signature-sdk-ios"; path = ..; sourceTree = SOURCE_ROOT; };
+		84B815645051FE2845BDFE22 /* PdfSignatureExampleUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PdfSignatureExampleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8A8348D2CADBFF4F4409E3C3 /* sample.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = sample.pdf; sourceTree = "<group>"; };
 		BAF64A444759964C6804BDF1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -30,6 +45,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0913EE40287DD1BE0F8744B3 /* PdfSignatureExampleUITests */ = {
+			isa = PBXGroup;
+			children = (
+				3C8DF7AD544A40A2C30A8C7D /* OverlayUITests.swift */,
+			);
+			path = PdfSignatureExampleUITests;
+			sourceTree = "<group>";
+		};
 		2AC00442DFCA3484EFACF61D /* Packages */ = {
 			isa = PBXGroup;
 			children = (
@@ -43,6 +66,7 @@
 			children = (
 				2AC00442DFCA3484EFACF61D /* Packages */,
 				AC0D4DC822890A4C274D6AF6 /* PdfSignatureExample */,
+				0913EE40287DD1BE0F8744B3 /* PdfSignatureExampleUITests */,
 				E6FE91C429046D4E2992AE6D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -52,6 +76,7 @@
 			children = (
 				BAF64A444759964C6804BDF1 /* Info.plist */,
 				41444337F8EC09F249CB2034 /* PdfSignatureExampleApp.swift */,
+				8A8348D2CADBFF4F4409E3C3 /* sample.pdf */,
 			);
 			path = PdfSignatureExample;
 			sourceTree = "<group>";
@@ -60,6 +85,7 @@
 			isa = PBXGroup;
 			children = (
 				13F6AB498D1D6AE2D034151C /* PdfSignatureExample.app */,
+				84B815645051FE2845BDFE22 /* PdfSignatureExampleUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -67,11 +93,30 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		0324FD176E183C089B6E97F7 /* PdfSignatureExampleUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 86AB747AB719A192502A2803 /* Build configuration list for PBXNativeTarget "PdfSignatureExampleUITests" */;
+			buildPhases = (
+				5C434935575551F7B00FF754 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				080474CBAC96D2FAE909889C /* PBXTargetDependency */,
+			);
+			name = PdfSignatureExampleUITests;
+			packageProductDependencies = (
+			);
+			productName = PdfSignatureExampleUITests;
+			productReference = 84B815645051FE2845BDFE22 /* PdfSignatureExampleUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		E76ACD251F1067469F97B0C1 /* PdfSignatureExample */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 7CDF3B9A707B909858C4007B /* Build configuration list for PBXNativeTarget "PdfSignatureExample" */;
 			buildPhases = (
 				A4BC687E1DB531A292946DFD /* Sources */,
+				B98D3812612A86118F92E327 /* Resources */,
 				8659B783541257AA048CEE25 /* Frameworks */,
 			);
 			buildRules = (
@@ -95,6 +140,11 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					0324FD176E183C089B6E97F7 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+						TestTargetID = E76ACD251F1067469F97B0C1;
+					};
 					E76ACD251F1067469F97B0C1 = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
@@ -119,11 +169,31 @@
 			projectRoot = "";
 			targets = (
 				E76ACD251F1067469F97B0C1 /* PdfSignatureExample */,
+				0324FD176E183C089B6E97F7 /* PdfSignatureExampleUITests */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		B98D3812612A86118F92E327 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE79AF58A2C65320AC1912F9 /* sample.pdf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		5C434935575551F7B00FF754 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A5116E5ED156F25100D9DBC0 /* OverlayUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A4BC687E1DB531A292946DFD /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -134,7 +204,32 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		080474CBAC96D2FAE909889C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E76ACD251F1067469F97B0C1 /* PdfSignatureExample */;
+			targetProxy = C36B3C80F64BBE4ACFBF52AC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		06B9E339D27808F12E3CAAC8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.fvory.psdk.example.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = PdfSignatureExample;
+			};
+			name = Release;
+		};
 		105A808F496D259EBC9987DA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -227,6 +322,23 @@
 			};
 			name = Release;
 		};
+		E417F32C24FF3F310F56DB79 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.fvory.psdk.example.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = PdfSignatureExample;
+			};
+			name = Debug;
+		};
 		EE0D6BCCC6C110E29B504E15 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -302,6 +414,15 @@
 			buildConfigurations = (
 				42C10979A00EC60B19FB2864 /* Debug */,
 				105A808F496D259EBC9987DA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		86AB747AB719A192502A2803 /* Build configuration list for PBXNativeTarget "PdfSignatureExampleUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E417F32C24FF3F310F56DB79 /* Debug */,
+				06B9E339D27808F12E3CAAC8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

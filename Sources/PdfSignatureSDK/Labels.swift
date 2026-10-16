@@ -1,0 +1,103 @@
+import Foundation
+
+/// Every text shown by the viewer. Defaults are the web SDK's English texts; use ``indonesian`` for
+/// Bahasa Indonesia. Labels stored on items sent to the backend stay "Signature" and "E-Materai" in
+/// every language, like the web SDK. Texts containing `%d` / `%@` are format strings.
+public struct PsdkLabels: Sendable {
+    // Labels the web SDK already lets you change
+    public var uploadBtn = "Open PDF"
+    public var signatureBtn = "Add Signature"
+    public var estampBtn = "E-Materai"
+    public var clearBtn = "Clear All"
+    public var signatureModalTitle = "Select Signature Role"
+    public var estampModalTitle = "Select E-Materai"
+    public var defaultGroup = "Umum"
+    public var passwordModalTitle = "Password Protected"
+    public var passwordModalDesc = "This document is encrypted. Please enter the password to view it."
+    public var passwordPlaceholder = "Enter document password"
+    public var passwordIncorrect = "Incorrect password. Please try again."
+    public var cancelBtn = "Cancel"
+    public var unlockBtn = "Unlock"
+    public var unlockingBtn = "Unlocking..."
+    // Texts fixed in the web SDK, configurable here
+    public var brandDefault = "PDF Viewer"
+    public var emptyTitle = "No Document Loaded"
+    public var emptySubtitle = "Upload a PDF file to get started. You can also add signatures and e-materai stamps."
+    public var sidebarTitle = "Pages"
+    public var thumbLabel = "Page %d"
+    public var statusReady = "Ready"
+    public var signatureCountOne = "%d signature"
+    public var signatureCountOther = "%d signatures"
+    public var securedBadge = "Password Protected (Encrypted)"
+    /// Picker text for an option without a label. Items placed from code are labelled "Signature".
+    public var defaultSignatureLabel = "Signature"
+    public var defaultEStampLabel = "E-Materai"
+    public var zoomIn = "Zoom in"
+    public var zoomOut = "Zoom out"
+    public var fitToScreen = "Fit to screen"
+    public var prevPage = "Previous page"
+    public var nextPage = "Next page"
+    public var toggleTheme = "Toggle Theme"
+    // Mobile-only texts
+    public var goToPageTitle = "Go to page"
+    public var okBtn = "OK"
+    public var moreMenu = "More"
+    /// VoiceOver text of an item: label, page.
+    public var a11yItem = "%@, page %d"
+    public var a11yDelete = "Delete"
+    public var a11yMoveUp = "Move up"
+    public var a11yMoveDown = "Move down"
+    public var a11yMoveLeft = "Move left"
+    public var a11yMoveRight = "Move right"
+    public var a11yBigger = "Make bigger"
+    public var a11ySmaller = "Make smaller"
+    public var a11yPage = "Page %d of %d"
+    public var errorLoad = "Failed to open document"
+
+    public init() {}
+
+    /// Bahasa Indonesia preset.
+    public static var indonesian: PsdkLabels {
+        var labels = PsdkLabels()
+        labels.uploadBtn = "Buka PDF"
+        labels.signatureBtn = "Tambah Tanda Tangan"
+        labels.clearBtn = "Hapus Semua"
+        labels.signatureModalTitle = "Pilih Peran Penanda Tangan"
+        labels.estampModalTitle = "Pilih E-Materai"
+        labels.passwordModalTitle = "Dilindungi Kata Sandi"
+        labels.passwordModalDesc = "Dokumen ini terenkripsi. Masukkan kata sandi untuk membukanya."
+        labels.passwordPlaceholder = "Masukkan kata sandi dokumen"
+        labels.passwordIncorrect = "Kata sandi salah. Silakan coba lagi."
+        labels.cancelBtn = "Batal"
+        labels.unlockBtn = "Buka"
+        labels.unlockingBtn = "Membuka..."
+        labels.emptyTitle = "Belum Ada Dokumen"
+        labels.emptySubtitle = "Buka file PDF untuk memulai. Anda juga dapat menambahkan tanda tangan dan e-materai."
+        labels.sidebarTitle = "Halaman"
+        labels.thumbLabel = "Halaman %d"
+        labels.statusReady = "Siap"
+        labels.signatureCountOne = "%d tanda tangan"
+        labels.signatureCountOther = "%d tanda tangan"
+        labels.securedBadge = "Dilindungi Kata Sandi (Terenkripsi)"
+        labels.defaultSignatureLabel = "Tanda Tangan"
+        labels.zoomIn = "Perbesar"
+        labels.zoomOut = "Perkecil"
+        labels.fitToScreen = "Sesuaikan layar"
+        labels.prevPage = "Halaman sebelumnya"
+        labels.nextPage = "Halaman berikutnya"
+        labels.toggleTheme = "Ganti Tema"
+        labels.goToPageTitle = "Ke halaman"
+        labels.moreMenu = "Lainnya"
+        labels.a11yItem = "%@, halaman %d"
+        labels.a11yDelete = "Hapus"
+        labels.a11yMoveUp = "Geser ke atas"
+        labels.a11yMoveDown = "Geser ke bawah"
+        labels.a11yMoveLeft = "Geser ke kiri"
+        labels.a11yMoveRight = "Geser ke kanan"
+        labels.a11yBigger = "Perbesar"
+        labels.a11ySmaller = "Perkecil"
+        labels.a11yPage = "Halaman %d dari %d"
+        labels.errorLoad = "Gagal membuka dokumen"
+        return labels
+    }
+}

@@ -15,12 +15,15 @@ struct ContentView: View {
     @StateObject private var controller = PdfSignatureController(
         config: PsdkConfig(
             file: .bundle(name: "sample.pdf"),
-            labels: .indonesian,
+            theme: .system,
             signatureOptions: [
                 PickerOption(id: "direktur", label: "Direktur", group: "Internal"),
                 PickerOption(id: "klien", label: "Klien", group: "Eksternal")
             ],
-            groupByCategory: true
+            estampOptions: [PickerOption(id: "materai-10000", label: "Materai 10.000")],
+            groupByCategory: true,
+            labels: .indonesian,
+            ui: PsdkUiConfig(topbar: TopBarConfig(brandText: "PSDK Example"))
         )
     )
     @State private var locked = false

@@ -61,7 +61,7 @@ final class ViewerTests: XCTestCase {
         let sizes = try XCTUnwrap(expected["pageSizes"] as? [[Double]])
         XCTAssertEqual(viewer.totalPages, sizes.count, pdf)
         for (index, size) in sizes.enumerated() {
-            let actual = try XCTUnwrap(viewer.pageSize(index + 1))
+            let actual = try XCTUnwrap(viewer.getPageSize(index + 1))
             XCTAssertEqual(Double(actual.width), size[0], accuracy: tolerance, "\(pdf) page \(index + 1) width")
             XCTAssertEqual(Double(actual.height), size[1], accuracy: tolerance, "\(pdf) page \(index + 1) height")
         }
@@ -122,7 +122,7 @@ final class ViewerTests: XCTestCase {
     func testRenderPageFollowsRotatedPageSize() async throws {
         let viewer = try await loadedViewer("geometry.pdf")
         for page in 1...viewer.totalPages {
-            let size = try XCTUnwrap(viewer.pageSize(page))
+            let size = try XCTUnwrap(viewer.getPageSize(page))
             let rendered = await viewer.renderPage(page, scale: 1)
             let image = try XCTUnwrap(rendered)
             XCTAssertEqual(image.size.width, size.width.rounded(), accuracy: 1, "page \(page)")
@@ -134,7 +134,7 @@ final class ViewerTests: XCTestCase {
     func testMoveAndResizeStayOnThePage() async throws {
         let viewer = try await loadedViewer("sample.pdf")
         let id = try viewer.placeSignature(PlaceOptions(x: 10, y: 10))
-        let page = try XCTUnwrap(viewer.pageSize(1))
+        let page = try XCTUnwrap(viewer.getPageSize(1))
         viewer.moveItem(id: id, x: 10_000, y: -50)
         var item = try XCTUnwrap(viewer.getSignatures().first)
         XCTAssertEqual(item.x, Double(page.width) - item.width, accuracy: 0.001)
@@ -175,25 +175,104 @@ final class ViewerTests: XCTestCase {
         viewer.destroy()
     }
 
+    /// Waits on the main actor until `condition` holds (the viewer works through async steps).
+    private func waitUntil(_ condition: () -> Bool, file: StaticString = #filePath, line: UInt = #line) async {
+        for _ in 0..<200 where !condition() { await Task.yield() }
+        XCTAssertTrue(condition(), file: file, line: line)
+    }
+
+    /// Like Android, `loadDocument` waits for the password and returns once the document is open.
     func testPasswordFlow() async throws {
-        let viewer = PdfSignatureView()
+        let viewer = PdfSignatureView(config: PsdkConfig(ui: PsdkUiConfig(passwordDialog: false)))
         var requests: [PasswordRequest] = []
         var loaded = 0
         viewer.on(.passwordRequested) { event in
             if case let .passwordRequested(request) = event { requests.append(request) }
         }
         viewer.on(.documentLoaded) { _ in loaded += 1 }
-        try await viewer.loadDocument(.data(fixture("pdfs/password-aes256.pdf")))
-        XCTAssertEqual(requests.count, 1)
+        let data = try fixture("pdfs/password-aes256.pdf")
+        let load = Task { try await viewer.loadDocument(.data(data)) }
+        await waitUntil { requests.count == 1 }
         XCTAssertFalse(requests[0].isIncorrect)
         XCTAssertFalse(viewer.isLoaded)
+        XCTAssertTrue(viewer.isPasswordProtected)
         requests[0].updatePassword("wrong")
-        XCTAssertEqual(requests.count, 2)
+        await waitUntil { requests.count == 2 }
         XCTAssertTrue(requests[1].isIncorrect)
+        requests[0].updatePassword("test123") // an old prompt cannot answer the new one
+        XCTAssertFalse(viewer.isLoaded)
         requests[1].updatePassword("test123")
+        try await load.value
         XCTAssertEqual(loaded, 1)
         XCTAssertTrue(viewer.isLoaded)
         XCTAssertEqual(viewer.totalPages, 5)
+        XCTAssertTrue(viewer.isPasswordProtected, "the 🔒 badge stays while the encrypted document is open")
+        viewer.destroy()
+    }
+
+    func testCancelledPasswordThrowsAndShowsTheEmptyState() async throws {
+        let viewer = PdfSignatureView(config: PsdkConfig(ui: PsdkUiConfig(passwordDialog: false)))
+        var request: PasswordRequest?
+        viewer.on(.passwordRequested) { event in
+            if case let .passwordRequested(value) = event { request = value }
+        }
+        let data = try fixture("pdfs/password-aes256.pdf")
+        let load = Task { try await viewer.loadDocument(.data(data)) }
+        await waitUntil { request != nil }
+        request?.cancel()
+        do {
+            try await load.value
+            XCTFail("Cancelling must throw")
+        } catch {
+            XCTAssertEqual(error as? PsdkError, .passwordCancelled)
+        }
+        XCTAssertFalse(viewer.isLoaded)
+        XCTAssertFalse(viewer.isPasswordProtected)
+        viewer.destroy()
+    }
+
+    func testEstampKeepsAspectRatioWhenAsked() async throws {
+        let viewer = try await loadedViewer("sample.pdf")
+        let stamp = try viewer.placeEStamp(PlaceOptions(x: 10, y: 10, width: 80, height: 80))
+        viewer.resizeItem(id: stamp, width: 120, height: 60)
+        XCTAssertEqual(viewer.getSignatures()[0].height, 60, "free resize by default")
+        viewer.updateConfig { $0.estampKeepAspectRatio = true }
+        viewer.resizeItem(id: stamp, width: 240, height: 500)
+        let item = viewer.getSignatures()[0]
+        XCTAssertEqual(item.width, 240, accuracy: 0.001)
+        XCTAssertEqual(item.height, 120, accuracy: 0.001)
+        viewer.destroy()
+    }
+
+    func testChromeRulesMatchAndroid() {
+        let labels = PsdkLabels()
+        XCTAssertTrue(ChromeRules.isTablet(.auto, width: 600))
+        XCTAssertFalse(ChromeRules.isTablet(.auto, width: 599))
+        XCTAssertFalse(ChromeRules.isTablet(.phone, width: 1000))
+        XCTAssertEqual(ChromeRules.itemCount(0, labels: labels), nil)
+        XCTAssertEqual(ChromeRules.itemCount(1, labels: labels), "1 signature")
+        XCTAssertEqual(ChromeRules.itemCount(3, labels: labels), "3 signatures")
+        XCTAssertEqual(ChromeRules.zoomPercent(1.256), "126%")
+        XCTAssertEqual(ChromeRules.parsePage(" 12 "), 12)
+        XCTAssertNil(ChromeRules.parsePage("x"))
+        let groups = ChromeRules.group(
+            [PickerOption(id: "a", group: "B"), PickerOption(id: "b"), PickerOption(id: "c", group: "B")],
+            defaultGroup: "Umum"
+        )
+        XCTAssertEqual(groups.map(\.0), ["B", "Umum"])
+        XCTAssertEqual(groups[0].1.map(\.id), ["a", "c"])
+        let off = TopBarConfig(upload: false, signature: false, eStamp: false, pagination: false, paginationInput: false,
+                               zoom: false, themeToggle: false, brandText: "")
+        XCTAssertFalse(ChromeRules.topBarHasContent(off))
+        XCTAssertTrue(ChromeRules.topBarHasContent(TopBarConfig()))
+    }
+
+    func testThemeToggleAndColors() async throws {
+        let viewer = try await loadedViewer("sample.pdf")
+        XCTAssertFalse(viewer.isDark)
+        viewer.toggleTheme()
+        XCTAssertEqual(viewer.config.theme, .dark)
+        XCTAssertEqual(viewer.colors.background, PsdkColors.dark.background)
         viewer.destroy()
     }
 

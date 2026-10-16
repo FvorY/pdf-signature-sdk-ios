@@ -10,6 +10,8 @@ public final class PdfSignatureController: ObservableObject {
     @Published public private(set) var totalPages: Int
     @Published public private(set) var currentScale: CGFloat
     @Published public private(set) var signatures: [SignatureItem]
+    @Published public private(set) var isLoaded: Bool
+    @Published public private(set) var isPasswordProtected: Bool
 
     public let view: PdfSignatureView
     private var subscriptions: [PsdkSubscription] = []
@@ -20,6 +22,8 @@ public final class PdfSignatureController: ObservableObject {
         totalPages = view.totalPages
         currentScale = view.currentScale
         signatures = view.getSignatures()
+        isLoaded = view.isLoaded
+        isPasswordProtected = view.isPasswordProtected
         subscriptions.append(view.on(.documentLoaded) { [weak self] _ in self?.refresh() })
         subscriptions.append(view.on(.pageChanged) { [weak self] _ in self?.refresh() })
         subscriptions.append(view.on(.signaturePlaced) { [weak self] _ in self?.refresh() })
@@ -27,6 +31,7 @@ public final class PdfSignatureController: ObservableObject {
         subscriptions.append(view.on(.signatureMoved) { [weak self] _ in self?.refresh() })
         subscriptions.append(view.on(.signatureRemoved) { [weak self] _ in self?.refresh() })
         subscriptions.append(view.on(.signaturesCleared) { [weak self] _ in self?.refresh() })
+        subscriptions.append(view.on(.passwordRequested) { [weak self] _ in self?.refresh() })
     }
 
     private func refresh() {
@@ -34,6 +39,8 @@ public final class PdfSignatureController: ObservableObject {
         totalPages = view.totalPages
         currentScale = view.currentScale
         signatures = view.getSignatures()
+        isLoaded = view.isLoaded
+        isPasswordProtected = view.isPasswordProtected
     }
 
 }

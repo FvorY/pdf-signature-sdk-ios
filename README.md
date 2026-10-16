@@ -25,7 +25,10 @@ Languages and full API documentation:
 - Signature and E-Materai placement with drag, resize, delete, and per-item locks.
 - Swift API, event handlers, Combine publisher, and `Codable` output.
 - UIKit `PdfSignatureView` (`UIView`) and a SwiftUI wrapper.
-- Password-protected PDFs, custom labels, picker options, skeleton loading, and secure screen.
+- Built-in toolbar for phones and tablets (upload, add, clear, pages, zoom, theme), page indicator,
+  thumbnails, status line and empty state, the same as the Android SDK.
+- Light, dark and system themes with 18 color tokens, custom font and labels (English and Indonesian).
+- Password-protected PDFs (built-in dialog), upload button, skeleton loading, VoiceOver, and secure screen.
 - No third-party runtime dependency.
 
 ## Requirements
@@ -106,7 +109,8 @@ struct SignScreen: View {
 }
 ```
 
-The controller publishes `currentPage`, `totalPages`, `currentScale`, and `signatures`.
+The controller publishes `currentPage`, `totalPages`, `currentScale`, `signatures`, `isLoaded`,
+and `isPasswordProtected`.
 
 ## PDF sources
 
@@ -141,7 +145,7 @@ let id = try viewer.placeSignature(
     )
 )
 
-try viewer.placeEStamp(PlaceOptions(page: 1, x: 420, y: 700))
+try viewer.placeEStamp(PlaceOptions(x: 420, y: 700, page: 1))
 
 let items = viewer.getSignatures()
 let json = try JSONEncoder().encode(items)
@@ -172,8 +176,8 @@ can also set `PdfSignatureViewDelegate`; Combine users can collect `eventsPublis
 ## Configuration and security
 
 `PsdkConfig` controls theme, labels, picker options, initial zoom, item locks, UI layout, colors,
-typography, and `secureScreen`. Set `secureScreen: true` to prevent screenshots and screen
-recording while the viewer is visible.
+typography, and `secureScreen`. Set `secureScreen: true` to cover the viewer while the screen is
+recorded or mirrored; iOS gives apps no way to block regular screenshots.
 
 For password-protected PDFs, use the built-in dialog or handle the event yourself:
 

@@ -24,7 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		13F6AB498D1D6AE2D034151C /* PdfSignatureExample.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PdfSignatureExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13F6AB498D1D6AE2D034151C /* PdfSignatureExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PdfSignatureExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C8DF7AD544A40A2C30A8C7D /* OverlayUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayUITests.swift; sourceTree = "<group>"; };
 		41444337F8EC09F249CB2034 /* PdfSignatureExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PdfSignatureExampleApp.swift; sourceTree = "<group>"; };
 		62AACFAEE55BE341DC2661D4 /* pdf-signature-sdk-ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "pdf-signature-sdk-ios"; path = ..; sourceTree = SOURCE_ROOT; };
@@ -146,7 +146,6 @@
 						TestTargetID = E76ACD251F1067469F97B0C1;
 					};
 					E76ACD251F1067469F97B0C1 = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -235,6 +234,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = KZ987LQHH5;
 				INFOPLIST_FILE = PdfSignatureExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -251,6 +251,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = KZ987LQHH5;
 				INFOPLIST_FILE = PdfSignatureExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

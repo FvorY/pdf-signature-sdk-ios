@@ -30,8 +30,8 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
 
     let pdfView = PDFView()
     let overlayView = ItemOverlayView()
+    lazy var chrome = ChromeView(owner: self)
     var document: PDFDocument?
-    private var pendingPasswordDocument: PDFDocument?
     var items: [SignatureItem] = []
     var itemImages: [String: UIImage] = [:]
     var explicitImageHeights: Set<String> = []
@@ -42,6 +42,11 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
     var skeletonView: UIView?
     var secureScreenObserver: NSObjectProtocol?
     var secureScreenOverlay: UIView?
+    var uploadDelegate: UploadPickerDelegate?
+    /// Why the last load failed; the empty state shows it (details only with `logLevel = .debug`).
+    var lastError: Error?
+    private var loadToken = 0
+    private var pendingPassword: (id: UUID, continuation: CheckedContinuation<String?, Never>)?
 
     static let signatureWidth = 160.0
     static let signatureHeight = 48.0
@@ -54,25 +59,24 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
         self.config = config
         self.currentScale = CGFloat(config.scale ?? 1)
         super.init(frame: .zero)
-        pdfView.translatesAutoresizingMaskIntoConstraints = false
         pdfView.autoScales = config.scale == nil
+        pdfView.minScaleFactor = 0.25
+        pdfView.maxScaleFactor = 4
         pdfView.delegate = self
         pdfView.displayMode = .singlePageContinuous
         pdfView.displayDirection = .vertical
-        addSubview(pdfView)
-        overlayView.translatesAutoresizingMaskIntoConstraints = false
         overlayView.owner = self
-        addSubview(overlayView)
+        chrome.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(chrome)
+        chrome.pin(chrome, to: self)
         for child in [pdfView, overlayView] as [UIView] {
-            NSLayoutConstraint.activate([
-                child.leadingAnchor.constraint(equalTo: leadingAnchor),
-                child.trailingAnchor.constraint(equalTo: trailingAnchor),
-                child.topAnchor.constraint(equalTo: topAnchor),
-                child.bottomAnchor.constraint(equalTo: bottomAnchor)
-            ])
+            child.translatesAutoresizingMaskIntoConstraints = false
+            chrome.viewerArea.addSubview(child)
+            chrome.pin(child, to: chrome.viewerArea)
         }
         observePdfView()
         configureSecureScreenObserver()
+        applyTheme()
         if let file = config.file {
             Task { try? await loadDocument(file) }
         }
@@ -87,65 +91,104 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
         overlayView.setNeedsDisplay()
     }
 
+    override public func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if config.theme == .system, traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
+            applyTheme()
+        }
+    }
+
     // MARK: - Loading
+
+    /// Opens a PDF. For an encrypted PDF it waits until `passwordRequested` is answered (or the
+    /// built-in dialog), and throws ``PsdkError/passwordCancelled`` when the prompt is cancelled.
     public func loadDocument(_ source: PdfSource) async throws {
-        guard !isDestroyed else { return }
+        guard !isDestroyed else { throw PsdkError.destroyed }
+        answerPassword(nil, id: pendingPassword?.id)
+        loadToken += 1
+        let token = loadToken
         isLoading = true
-        defer { isLoading = false }
-        let data = try await loadData(source)
-        guard let loaded = PDFDocument(data: data) else { throw PsdkError.invalidDocument }
+        lastError = nil
+        chrome.refresh()
+        defer {
+            if token == loadToken {
+                isLoading = false
+                chrome.refresh()
+            }
+        }
+        do {
+            let data = try await loadData(source)
+            guard let loaded = PDFDocument(data: data) else { throw PsdkError.invalidDocument }
+            if loaded.isLocked { try await unlock(loaded, token: token) }
+            guard token == loadToken, !isDestroyed else { return }
+            show(loaded)
+            log(.debug, "Loaded \(loaded.pageCount) pages")
+        } catch {
+            if token == loadToken, !isDestroyed {
+                lastError = error
+                if case PsdkError.passwordCancelled = error { lastError = nil; closeDocument() }
+                log(.error, "Could not open the PDF: \(error)")
+            }
+            throw error
+        }
+    }
+
+    private func unlock(_ locked: PDFDocument, token: Int) async throws {
+        var incorrect = false
+        while true {
+            guard let password = await askPassword(isIncorrect: incorrect, token: token) else {
+                throw PsdkError.passwordCancelled
+            }
+            if locked.unlock(withPassword: password) { return }
+            incorrect = true
+        }
+    }
+
+    /// Sends `passwordRequested` and shows the built-in dialog. `nil` when cancelled or replaced.
+    private func askPassword(isIncorrect: Bool, token: Int) async -> String? {
+        guard token == loadToken, !isDestroyed else { return nil }
+        isPasswordProtected = true
+        return await withCheckedContinuation { continuation in
+            let id = UUID()
+            pendingPassword = (id, continuation)
+            let request = PasswordRequest(
+                isIncorrect: isIncorrect,
+                submit: { [weak self] password in self?.answerPassword(password, id: id) },
+                cancel: { [weak self] in self?.answerPassword(nil, id: id) }
+            )
+            emit(.passwordRequested(request))
+            presentPasswordDialog(request)
+        }
+    }
+
+    /// Answers only the prompt that is still open, so an old request cannot answer a newer one.
+    private func answerPassword(_ password: String?, id: UUID?) {
+        guard let pending = pendingPassword, pending.id == id else { return }
+        pendingPassword = nil
+        pending.continuation.resume(returning: password)
+    }
+
+    private func show(_ loaded: PDFDocument) {
         document = loaded
         pdfView.document = loaded
         applyConfiguredScale()
         observeScrollViewIfNeeded()
-        if loaded.isLocked {
-            pendingPasswordDocument = loaded
-            isPasswordProtected = true
-            isLoaded = false
-            totalPages = 0
-            currentPage = 1
-            emitPasswordRequest(isIncorrect: false)
-            return
-        }
-        finishLoading(loaded)
-    }
-
-    private func finishLoading(_ loaded: PDFDocument) {
-        pendingPasswordDocument = nil
         totalPages = loaded.pageCount
         currentPage = 1
         isLoaded = totalPages > 0
-        isPasswordProtected = false
+        // The 🔒 badge shows while an encrypted document is open
+        isPasswordProtected = loaded.isEncrypted
         items.removeAll()
         itemImages.removeAll()
         explicitImageHeights.removeAll()
         emit(.signaturesCleared)
         emit(.documentLoaded(totalPages: totalPages))
+        chrome.rebuildIfNeeded()
         overlayView.setNeedsDisplay()
     }
 
-    private func emitPasswordRequest(isIncorrect: Bool) {
-        let request = PasswordRequest(
-            isIncorrect: isIncorrect,
-            submit: { [weak self] password in self?.unlock(password) },
-            cancel: { [weak self] in self?.cancelPassword() }
-        )
-        emit(.passwordRequested(request))
-    }
-
-    private func unlock(_ password: String) {
-        guard let locked = pendingPasswordDocument else { return }
-        if locked.unlock(withPassword: password) {
-            document = locked
-            pdfView.document = locked
-            finishLoading(locked)
-        } else {
-            emitPasswordRequest(isIncorrect: true)
-        }
-    }
-
-    private func cancelPassword() {
-        pendingPasswordDocument = nil
+    /// Back to the empty state, e.g. after a cancelled password prompt.
+    private func closeDocument() {
         document = nil
         pdfView.document = nil
         totalPages = 0
@@ -155,6 +198,7 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
         items.removeAll()
         itemImages.removeAll()
         explicitImageHeights.removeAll()
+        chrome.rebuildIfNeeded()
         overlayView.setNeedsDisplay()
     }
 
@@ -180,6 +224,7 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
     public func setPaginationLocked(_ locked: Bool) {
         isPaginationLocked = locked
         applyScrollLock()
+        chrome.refresh()
     }
 
     public func setScale(_ scale: CGFloat) async {
@@ -187,6 +232,7 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
         currentScale = min(max(scale, 0.25), 4.0)
         pdfView.scaleFactor = currentScale
         overlayView.setNeedsDisplay()
+        chrome.refresh()
     }
 
     /// A fixed `config.scale`, or PDFView's fit-to-width when it is `nil`.
@@ -204,7 +250,7 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
 
     @discardableResult
     public func fitToScreen() async -> CGFloat {
-        guard let size = pageSize(currentPage) else { return currentScale }
+        guard let size = getPageSize(currentPage) else { return currentScale }
         let available = pdfView.bounds.insetBy(dx: 24, dy: 24).size
         guard size.width > 0, size.height > 0, available.width > 0, available.height > 0 else { return currentScale }
         await setScale(min(available.width / size.width, available.height / size.height))
@@ -214,97 +260,10 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
     @discardableResult
     public func fitToWidth() async -> CGFloat {
         let availableWidth = pdfView.bounds.insetBy(dx: 24, dy: 24).width
-        let widestPage = (0..<totalPages).compactMap { pageSize($0 + 1)?.width }.max() ?? 0
+        let widestPage = (0..<totalPages).compactMap { getPageSize($0 + 1)?.width }.max() ?? 0
         guard availableWidth > 0, widestPage > 0 else { return currentScale }
         await setScale(availableWidth / widestPage)
         return currentScale
-    }
-
-    // MARK: - Items
-
-    @discardableResult
-    public func placeSignature(_ options: PlaceOptions = .init()) throws -> String {
-        try place(type: .signature, options: options)
-    }
-
-    @discardableResult
-    public func placeEStamp(_ options: PlaceOptions = .init()) throws -> String {
-        try place(type: .estamp, options: options)
-    }
-
-    /// Opens the native picker, or places the default signature when no options were configured.
-    public func openSignatureModal() {
-        openPicker(type: .signature)
-    }
-
-    /// Opens the native picker, or places the default E-Materai when no options were configured.
-    public func openEStampModal() {
-        openPicker(type: .estamp)
-    }
-
-    /// Places an item the way the web SDK does: centered on the page (using the default size) unless
-    /// both `x` and `y` are given, and E-Materai always labelled "E-Materai".
-    func place(type: ItemType, options: PlaceOptions) throws -> String {
-        guard isLoaded else { throw PsdkError.documentNotLoaded }
-        let page = options.page ?? currentPage
-        guard page >= 1, page <= totalPages, let size = pageSize(page) else { throw PsdkError.invalidPage }
-        let isStamp = type == .estamp
-        let defaultWidth = isStamp ? Self.estampSize : Self.signatureWidth
-        let defaultHeight = isStamp ? Self.estampSize : Self.signatureHeight
-        let centered = options.x == nil || options.y == nil
-        let label = isStamp ? Self.estampLabel : (options.label.flatMap { $0.isEmpty ? nil : $0 } ?? Self.signatureLabel)
-        let item = SignatureItem(
-            id: Self.makeID(type),
-            type: type,
-            x: centered ? Double(size.width) / 2 - defaultWidth / 2 : options.x ?? 0,
-            y: centered ? Double(size.height) / 2 - defaultHeight / 2 : options.y ?? 0,
-            page: page,
-            label: label,
-            width: options.width ?? defaultWidth,
-            height: options.height ?? defaultHeight,
-            disableDrag: options.disableDrag,
-            disableDragging: options.disableDragging,
-            disableResize: options.disableResize,
-            locked: options.locked
-        )
-        items.append(item)
-        if options.height != nil { explicitImageHeights.insert(item.id) }
-        emit(isStamp ? .eStampPlaced(item) : .signaturePlaced(item))
-        overlayView.setNeedsDisplay()
-        if let image = options.image {
-            Task { [weak self] in await self?.applyImage(image, to: item.id) }
-        }
-        return item.id
-    }
-
-    public func removeSignature(_ id: String) {
-        guard items.contains(where: { $0.id == id }) else { return }
-        items.removeAll { $0.id == id }
-        itemImages.removeValue(forKey: id)
-        explicitImageHeights.remove(id)
-        emit(.signatureRemoved(id: id))
-        overlayView.setNeedsDisplay()
-    }
-
-    public func clearSignatures() {
-        items.removeAll()
-        itemImages.removeAll()
-        explicitImageHeights.removeAll()
-        emit(.signaturesCleared)
-        overlayView.setNeedsDisplay()
-    }
-
-    public func getSignatures() -> [SignatureItem] { items }
-
-    public func getSignaturesByPage(_ page: Int? = nil) -> [SignatureItem] {
-        items.filter { $0.page == (page ?? currentPage) }
-    }
-
-    /// Page size in PDF points as displayed (CropBox, width and height swapped for /Rotate 90 or 270),
-    /// rounded like the web SDK so default positions match it.
-    public func pageSize(_ page: Int) -> CGSize? {
-        guard let pdfPage = document?.page(at: page - 1) else { return nil }
-        return PageGeometry.webSize(PageGeometry.displaySize(bounds: pdfPage.bounds(for: .cropBox), rotation: pdfPage.rotation))
     }
 
     // MARK: - Events and lifecycle
@@ -336,8 +295,8 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
         transform(&config)
         if config.scale != oldScale { applyConfiguredScale() }
         applyScrollLock()
-        overlayView.setNeedsDisplay()
         configureSecureScreenObserver()
+        applyTheme()
     }
 
     public func destroy() {
@@ -345,7 +304,7 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
         isDestroyed = true
         pdfView.document = nil
         document = nil
-        pendingPasswordDocument = nil
+        answerPassword(nil, id: pendingPassword?.id)
         items.removeAll()
         itemImages.removeAll()
         explicitImageHeights.removeAll()
@@ -362,6 +321,7 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
         events.send(event)
         for handler in Array(handlers.values) { handler(event) }
         delegate?.pdfSignatureView(self, didReceive: event)
+        chrome.refresh()
     }
 }
 

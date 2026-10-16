@@ -25,6 +25,7 @@ extension PdfSignatureView {
                 guard let self else { return }
                 self.currentScale = self.pdfView.scaleFactor
                 self.overlayView.setNeedsDisplay()
+                self.chrome.refresh()
             }
         }
         let visible = center.addObserver(forName: .PDFViewVisiblePagesChanged, object: pdfView, queue: .main) { [weak self] _ in
@@ -44,9 +45,18 @@ extension PdfSignatureView {
         applyScrollLock()
     }
 
+    /// Scroll lock (`lockScrollWhenPaginationLocked`) and pinch / double-tap zoom (`ui.viewer.zoom`).
     func applyScrollLock() {
         let locked = isPaginationLocked && config.lockScrollWhenPaginationLocked
-        Self.findScrollView(in: pdfView)?.isScrollEnabled = !locked
+        let scrollView = Self.findScrollView(in: pdfView)
+        scrollView?.isScrollEnabled = !locked
+        scrollView?.pinchGestureRecognizer?.isEnabled = config.ui.viewer.zoom
+        Self.doubleTapRecognizers(in: pdfView).forEach { $0.isEnabled = config.ui.viewer.zoom }
+    }
+
+    private static func doubleTapRecognizers(in view: UIView) -> [UITapGestureRecognizer] {
+        let own = (view.gestureRecognizers ?? []).compactMap { $0 as? UITapGestureRecognizer }.filter { $0.numberOfTapsRequired == 2 }
+        return own + view.subviews.flatMap(doubleTapRecognizers)
     }
 
     private static func findScrollView(in view: UIView) -> UIScrollView? {

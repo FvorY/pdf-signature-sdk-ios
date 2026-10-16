@@ -33,7 +33,7 @@ extension PdfSignatureView {
     }
 
     func drawItem(_ item: SignatureItem, in rect: CGRect, showDelete: Bool, showResize: Bool) {
-        let color = item.type == .signature ? UIColor.systemBlue : UIColor.systemRed
+        let color = item.type == .signature ? colors.accent : colors.danger
         if let image = itemImages[item.id] {
             image.draw(in: rect)
         } else {
@@ -51,9 +51,9 @@ extension PdfSignatureView {
         border.stroke()
         if showDelete {
             let button = ItemOverlayView.deleteRect(for: rect).insetBy(dx: 5, dy: 5)
-            UIColor.systemRed.setFill()
+            colors.danger.setFill()
             UIBezierPath(ovalIn: button).fill()
-            UIColor.white.setStroke()
+            colors.onDanger.setStroke()
             let cross = UIBezierPath()
             let inset = button.insetBy(dx: 5.5, dy: 5.5)
             cross.move(to: CGPoint(x: inset.minX, y: inset.minY))
@@ -83,7 +83,7 @@ extension PdfSignatureView {
     }
 
     private func render(_ number: Int, scale: CGFloat?, withItems: Bool) -> UIImage? {
-        guard let pdfPage = document?.page(at: number - 1), let display = pageSize(number) else { return nil }
+        guard let pdfPage = document?.page(at: number - 1), let display = getPageSize(number) else { return nil }
         let factor = max(0.25, scale ?? currentScale)
         let size = CGSize(width: (display.width * factor).rounded(), height: (display.height * factor).rounded())
         guard size.width > 0, size.height > 0 else { return nil }

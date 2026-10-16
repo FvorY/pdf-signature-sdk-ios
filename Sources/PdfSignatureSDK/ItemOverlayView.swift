@@ -42,17 +42,20 @@ final class ItemOverlayView: UIView {
     /// Elements are kept per item id: VoiceOver and UI tests expect the same object between queries.
     private var elementCache: [String: UIAccessibilityElement] = [:]
 
-    /// One VoiceOver element per visible item, with a delete action (the overlay itself is drawn).
+    /// One VoiceOver element per visible item, with move, resize and delete actions like the
+    /// Android SDK (the overlay itself is drawn, so it has no subviews to read).
     override var accessibilityElements: [Any]? {
         get {
             guard let owner, !owner.isDestroyed else { return [] }
             var cache: [String: UIAccessibilityElement] = [:]
             let elements = visibleItems().map { item, rect -> UIAccessibilityElement in
-                let element = elementCache[item.id] ?? makeElement(for: item.id)
-                element.accessibilityLabel = item.label
-                element.accessibilityValue = "page \(item.page), x \(Int(item.x)), y \(Int(item.y))"
+                let element = elementCache[item.id] ?? UIAccessibilityElement(accessibilityContainer: self)
+                element.accessibilityTraits = .button
+                element.accessibilityLabel = String(format: owner.config.labels.a11yItem, item.label, item.page)
+                element.accessibilityValue = "x \(Int(item.x)), y \(Int(item.y)), \(Int(item.width)) × \(Int(item.height))"
                 element.accessibilityIdentifier = "psdk-item-\(item.type.rawValue)-\(item.page)"
                 element.accessibilityFrameInContainerSpace = rect
+                element.accessibilityCustomActions = owner.config.disabled ? [] : actions(for: item)
                 cache[item.id] = element
                 return element
             }
@@ -62,17 +65,39 @@ final class ItemOverlayView: UIView {
         set { _ = newValue }
     }
 
-    private func makeElement(for id: String) -> UIAccessibilityElement {
-        let element = UIAccessibilityElement(accessibilityContainer: self)
-        element.accessibilityTraits = .button
-        element.accessibilityCustomActions = [
-            UIAccessibilityCustomAction(name: "Delete") { [weak self] _ in
-                guard let owner = self?.owner, !owner.config.disabled else { return false }
-                owner.removeSignature(id)
+    private func actions(for item: SignatureItem) -> [UIAccessibilityCustomAction] {
+        guard let owner else { return [] }
+        let labels = owner.config.labels
+        let id = item.id
+        func action(_ name: String, _ change: @escaping (PdfSignatureView, SignatureItem) -> Void) -> UIAccessibilityCustomAction {
+            UIAccessibilityCustomAction(name: name) { [weak owner] _ in
+                guard let owner, let current = owner.items.first(where: { $0.id == id }) else { return false }
+                change(owner, current)
+                owner.finishOverlayMove(id)
                 return true
             }
-        ]
-        return element
+        }
+        var result: [UIAccessibilityCustomAction] = []
+        if owner.canDrag(item) {
+            let step = 10.0
+            result += [
+                action(labels.a11yMoveUp) { $0.moveItem(id: id, x: $1.x, y: $1.y - step) },
+                action(labels.a11yMoveDown) { $0.moveItem(id: id, x: $1.x, y: $1.y + step) },
+                action(labels.a11yMoveLeft) { $0.moveItem(id: id, x: $1.x - step, y: $1.y) },
+                action(labels.a11yMoveRight) { $0.moveItem(id: id, x: $1.x + step, y: $1.y) }
+            ]
+        }
+        if owner.canResize(item) {
+            result += [
+                action(labels.a11yBigger) { $0.resizeItem(id: id, width: $1.width * 1.1, height: $1.height * 1.1) },
+                action(labels.a11ySmaller) { $0.resizeItem(id: id, width: $1.width / 1.1, height: $1.height / 1.1) }
+            ]
+        }
+        result.append(UIAccessibilityCustomAction(name: labels.a11yDelete) { [weak owner] _ in
+            owner?.removeSignature(id)
+            return owner != nil
+        })
+        return result
     }
 
     override func draw(_ rect: CGRect) {
@@ -113,8 +138,19 @@ final class ItemOverlayView: UIView {
         guard let (item, rect) = hitItem(at: point) else { return }
         // The delete button works even on locked items, like the web SDK.
         if Self.deleteRect(for: rect).contains(point) {
+            owner.haptic()
             owner.removeSignature(item.id)
         }
+    }
+
+    private func beginPan(at point: CGPoint) {
+        guard let owner, let (item, rect) = hitItem(at: point) else { return }
+        mode = Self.resizeRect(for: rect).contains(point) ? .resize : .drag
+        let allowed = mode == .resize ? owner.canResize(item) : owner.canDrag(item)
+        activeID = allowed ? item.id : nil
+        if allowed { owner.haptic() }
+        start = (item.x, item.y, item.width, item.height)
+        moved = false
     }
 
     @objc private func handlePan(_ recognizer: UIPanGestureRecognizer) {
@@ -124,13 +160,7 @@ final class ItemOverlayView: UIView {
             // A pan is recognized only after the finger has moved, so find the item where the touch started
             let location = recognizer.location(in: self)
             let offset = recognizer.translation(in: self)
-            let point = CGPoint(x: location.x - offset.x, y: location.y - offset.y)
-            guard let (item, rect) = hitItem(at: point) else { return }
-            mode = Self.resizeRect(for: rect).contains(point) ? .resize : .drag
-            let allowed = mode == .resize ? owner.canResize(item) : owner.canDrag(item)
-            activeID = allowed ? item.id : nil
-            start = (item.x, item.y, item.width, item.height)
-            moved = false
+            beginPan(at: CGPoint(x: location.x - offset.x, y: location.y - offset.y))
         case .changed:
             guard let id = activeID else { return }
             let translation = recognizer.translation(in: self)

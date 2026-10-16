@@ -27,7 +27,10 @@ Bahasa dan dokumentasi lengkap:
 - Penempatan tanda tangan dan E-Materai dengan drag, resize, hapus, dan kunci per item.
 - API Swift, event handler, publisher Combine, dan output `Codable`.
 - `PdfSignatureView` (`UIView`) untuk UIKit dan wrapper untuk SwiftUI.
-- PDF berpassword, label dan picker yang dapat diubah, skeleton loading, dan secure screen.
+- Toolbar bawaan untuk ponsel dan tablet (upload, tambah, hapus semua, halaman, zoom, tema), indikator
+  halaman, thumbnail, status bar, dan empty state, sama seperti SDK Android.
+- Tema terang, gelap, dan sistem dengan 18 token warna, font dan label kustom (Inggris dan Indonesia).
+- PDF berpassword (dialog bawaan), tombol upload, skeleton loading, VoiceOver, dan secure screen.
 - Tidak memiliki dependensi runtime pihak ketiga.
 
 ## Persyaratan
@@ -107,8 +110,8 @@ struct SignScreen: View {
 }
 ```
 
-Controller menyediakan `currentPage`, `totalPages`, `currentScale`, dan `signatures` secara
-reaktif.
+Controller menyediakan `currentPage`, `totalPages`, `currentScale`, `signatures`, `isLoaded`, dan
+`isPasswordProtected` secara reaktif.
 
 ## Sumber PDF
 
@@ -144,7 +147,7 @@ let id = try viewer.placeSignature(
     )
 )
 
-try viewer.placeEStamp(PlaceOptions(page: 1, x: 420, y: 700))
+try viewer.placeEStamp(PlaceOptions(x: 420, y: 700, page: 1))
 
 let items = viewer.getSignatures()
 let json = try JSONEncoder().encode(items)
@@ -176,8 +179,8 @@ juga dapat memakai `PdfSignatureViewDelegate`; pengguna Combine dapat mengumpulk
 ## Konfigurasi dan keamanan
 
 `PsdkConfig` mengatur tema, label, picker, zoom awal, kunci item, layout UI, warna, tipografi, dan
-`secureScreen`. Set `secureScreen: true` untuk mencegah screenshot dan rekam layar saat viewer
-terlihat.
+`secureScreen`. Set `secureScreen: true` untuk menutup viewer saat layar direkam atau di-mirror; iOS
+tidak menyediakan cara bagi aplikasi untuk memblokir screenshot biasa.
 
 Untuk PDF berpassword, gunakan dialog bawaan atau tangani event sendiri:
 

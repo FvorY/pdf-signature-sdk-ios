@@ -19,20 +19,21 @@ final class PdfSignatureSDKTests: XCTestCase {
     func testRemoteTransportIsSecureByDefault() {
         let config = PsdkConfig()
         XCTAssertFalse(config.allowInsecureHttp)
-        XCTAssertEqual(config.theme, .system)
+        XCTAssertEqual(config.theme, .light)
+        XCTAssertNil(config.scale)
         XCTAssertFalse(config.disabled)
     }
 
     func testWebParityConfigurationSurface() {
         let option = PickerOption(id: "director", label: "Director", group: "Internal")
         let config = PsdkConfig(
-            labels: .indonesian,
+            disabled: true,
+            disableDragging: true,
             signatureOptions: [option],
             estampOptions: [PickerOption(id: "stamp")],
             groupByCategory: true,
-            disabled: true,
-            disableDragging: true,
-            ui: PsdkUiConfig(thumbnails: false)
+            labels: .indonesian,
+            ui: PsdkUiConfig(topbar: TopBarConfig(upload: false, brandText: ""), sidebar: SidebarConfig(thumbnails: false))
         )
 
         XCTAssertEqual(config.labels.signatureBtn, "Tambah Tanda Tangan")
@@ -40,7 +41,9 @@ final class PdfSignatureSDKTests: XCTestCase {
         XCTAssertTrue(config.groupByCategory)
         XCTAssertTrue(config.disabled)
         XCTAssertTrue(config.disableDragging)
-        XCTAssertFalse(config.ui.thumbnails)
+        XCTAssertFalse(config.ui.sidebar.thumbnails)
+        XCTAssertFalse(config.ui.topbar.upload)
+        XCTAssertNil(ChromeRules.brandText(config.ui.topbar, labels: config.labels))
     }
 
     func testSignatureItemCoordinatesRemainTopLeftPdfPoints() throws {

@@ -23,6 +23,8 @@ sys.exit("No iPhone simulator available")
 ')
 
 echo "Using simulator $DEVICE_ID"
+# A freshly booted simulator can drop the first touches of a UI test, so wait until it is ready
+xcrun simctl bootstatus "$DEVICE_ID" -b > /dev/null
 xcodebuild test \
   "${TARGET[@]}" \
   -destination "id=$DEVICE_ID" \

@@ -7,6 +7,23 @@ project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Built-in viewer UI matching the Android SDK: phone layout (top bar with ⋯ menu, scrollable bottom
+  bar, floating "‹ 1 / 5 ›" page indicator, thumbnail strip) and tablet layout (web-style toolbar,
+  thumbnail sidebar), status line with item count, zoom and 🔒 badge, empty state with upload button
+  and load error, go-to-page dialog, built-in password dialog.
+- Themes: `theme` (`.light` default, `.dark`, `.system` following the system), `lightColors` /
+  `darkColors` with the Android SDK's 18 tokens (`PsdkColors.light`, `.dark`, `.webLight`,
+  `.webDark`), `typography`. System sheets and menus follow the theme.
+- `PsdkLabels` with every text of the Android SDK (incl. VoiceOver texts) and `.indonesian`.
+- Upload button with the Files picker and `onUpload` (`UploadDecision`).
+- `ui.topbar` (`upload`, `signature`, `eStamp`, `pagination`, `paginationInput`, `zoom`,
+  `themeToggle`, `customView`, `logo`, `brandText`, `style`), `ui.sidebar.thumbnails`,
+  `ui.viewer.zoom`, `ui.statusbar`, `ui.passwordDialog`, `ui.layout`, `ui.haptics` are applied.
+- `estampKeepAspectRatio`, haptics, `logLevel` (os.Logger), `SkeletonOptions(customView:)`.
+- VoiceOver actions per item: move, bigger/smaller, delete.
+- `getPageSize(_:)` (same name as Android); `PsdkError.passwordCancelled` and `.destroyed`.
+- Tests that compile the guide's code samples, Chrome rules, theme, password cancel, aspect ratio;
+  UI tests for the toolbar picker and the ⋯ menu.
 - Web SDK parity tests with the same fixtures as the Android SDK (`Tests/.../Parity`): page sizes and
   item positions for `sample.pdf` and `geometry.pdf` (/Rotate 0/90/180/270, CropBox, MediaBox offset).
 - Example app is a working demo (bundled PDF, pickers, locks, JSON) with UI tests for drag, delete
@@ -38,6 +55,14 @@ project uses [Semantic Versioning](https://semver.org/).
 - SwiftLint failures that made CI fail.
 
 ### Changed
+- **Breaking:** `PsdkConfig` follows the Android SDK: parameter order, `lightColors` / `darkColors`
+  instead of `colors`, default theme `.light`, and `ui` nested as `topbar` / `sidebar` / `viewer`.
+  `PsdkColors` uses `UIColor` tokens. `PsdkLabels` is changed by assigning its properties.
+- `loadDocument` waits for the password of an encrypted PDF and throws `.passwordCancelled` when the
+  prompt is cancelled (before it returned right away). `isPasswordProtected` stays `true` while an
+  encrypted document is open.
+- `pageSize(_:)` is deprecated; use `getPageSize(_:)`.
+- The guides (EN/ID) are rewritten with the same 20 sections as the Android guides.
 - Placement matches the web SDK: items are centered unless both `x` and `y` are given, E-Materai is
   always labelled "E-Materai", a signature without a label is "Signature" (`labels` only changes
   picker titles), and ids end in 5 random base-36 characters.

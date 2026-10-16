@@ -11,4 +11,8 @@ public enum PsdkError: Error, Equatable {
     case invalidDocument
     case documentNotLoaded
     case invalidPage
+    /// The password prompt was cancelled (Android: `PsdkException.PasswordCancelled`).
+    case passwordCancelled
+    /// The viewer was destroyed.
+    case destroyed
 }

@@ -4,88 +4,207 @@
 ![iOS 14+](https://img.shields.io/badge/iOS-14%2B-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-PDF viewer native iOS (Swift). Dengan SDK ini, user bisa menaruh, menggeser, me-resize, dan
-menghapus kotak **tanda tangan** dan **E-Materai** di dokumen. Posisi dikembalikan dalam
-**PDF point**, sama persis dengan web SDK
-[`pdf-signature-esign-sdk`](https://www.npmjs.com/package/pdf-signature-esign-sdk) v1.1.2,
-sehingga backend yang sama bisa langsung menyelesaikan proses tanda tangan.
+PDF viewer native iOS untuk menempatkan **tanda tangan** dan **E-Materai** pada dokumen. User bisa
+menambah, menggeser, me-resize, mengunci, dan menghapus item. SDK mengembalikan posisi dalam PDF
+point, sehingga payload yang sama dapat dikirim ke backend yang dipakai SDK web dan Android.
 
-> 🚧 **Preview.** API viewer sudah dapat digunakan, tetapi API publik masih dalam tahap
-> stabilisasi dan belum merupakan rilis 1.0.0.
+SDK Android dan iOS memakai konsep inti yang sama: sumber PDF, penempatan item, event, koordinat,
+output JSON/Codable, dan proses signing di backend. Perbedaannya hanya pada integrasi UI sesuai
+platform.
 
-English: [README.md](README.md)
+> Preview: viewer dan Example app sudah dapat digunakan, tetapi API publik masih bisa berubah
+> sebelum rilis 1.0.0.
 
-Dokumentasi: [DOCUMENTATION.id.md](DOCUMENTATION.id.md) · [English documentation](DOCUMENTATION.en.md)
+Bahasa dan dokumentasi lengkap:
+
+- [English README](README.md)
+- [Dokumentasi Bahasa Indonesia](DOCUMENTATION.id.md)
+- [English documentation](DOCUMENTATION.en.md)
 
 ## Fitur
 
-- Menampilkan PDF multi-halaman dengan zoom, pagination, fit-to-screen, dan fit-to-width.
-- Menambahkan, menggeser, me-resize, menghapus, dan mengunci tanda tangan atau E-Materai.
-- Menghasilkan koordinat PDF point yang dapat langsung dikirim ke backend.
-- Mendukung PDF ber-password, event, konfigurasi label, kunci item, dan secure screen
-  (opsi tema, warna, dan toolbar belum diterapkan).
-- Dapat dipasang langsung pada UIKit sebagai `PdfSignatureView` (`UIView`) atau dipakai melalui SwiftUI.
+- Render dengan PDFKit, pagination, thumbnail, zoom, fit-to-screen, dan fit-to-width.
+- Penempatan tanda tangan dan E-Materai dengan drag, resize, hapus, dan kunci per item.
+- API Swift, event handler, publisher Combine, dan output `Codable`.
+- `PdfSignatureView` (`UIView`) untuk UIKit dan wrapper untuk SwiftUI.
+- PDF berpassword, label dan picker yang dapat diubah, skeleton loading, dan secure screen.
+- Tidak memiliki dependensi runtime pihak ketiga.
+
+## Persyaratan
+
+| Komponen | Persyaratan |
+|---|---|
+| iOS | 14.0+ |
+| Xcode | 16+ |
+| Swift | 5.9+ |
+| UI | UIKit atau SwiftUI |
 
 ## Instalasi
 
-**Swift Package Manager.** Di Xcode buka File → Add Package Dependencies…, tempel
-`https://github.com/FvorY/pdf-signature-sdk-ios`, lalu pilih *Branch: main* (belum ada tag rilis).
+### Swift Package Manager
+
+Di Xcode, pilih **File → Add Package Dependencies…**, lalu masukkan:
+
+```text
+https://github.com/FvorY/pdf-signature-sdk-ios
+```
+
+Pilih **Branch: main** karena belum ada tag rilis stabil. Di `Package.swift` bisa ditulis:
 
 ```swift
 .package(url: "https://github.com/FvorY/pdf-signature-sdk-ios", branch: "main")
 ```
 
-**CocoaPods:** `pod 'PdfSignatureSDK', :git => 'https://github.com/FvorY/pdf-signature-sdk-ios.git'`
+### CocoaPods
 
-Contoh UIKit, daftar API, event, password PDF, format koordinat, dan konfigurasi lengkap tersedia di [DOCUMENTATION.id.md](DOCUMENTATION.id.md).
+```ruby
+pod 'PdfSignatureSDK', :git => 'https://github.com/FvorY/pdf-signature-sdk-ios.git'
+```
 
-## Sistem koordinat
+## Mulai cepat: UIKit
 
-- Satuan: PDF point (1/72 inci). Kertas A4 = 595 × 842 pt.
-- Titik nol: pojok **kiri-atas** halaman. Sumbu Y mengarah ke bawah.
-- `x, y` adalah pojok kiri-atas item, sama dengan web SDK.
-
-## Pemakaian
+`PdfSignatureView` adalah `UIView`, jadi bisa langsung ditambahkan ke screen UIKit:
 
 ```swift
 import PdfSignatureSDK
+import UIKit
 
 let viewer = PdfSignatureView(config: PsdkConfig(file: .file(pdfURL)))
+viewer.translatesAutoresizingMaskIntoConstraints = false
 view.addSubview(viewer)
 
-viewer.on(.signaturePlaced) { event in print(event) }
-
-// Nanti, kirim posisi ke backend:
-let json = try JSONEncoder().encode(viewer.getSignatures())
+NSLayoutConstraint.activate([
+    viewer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+    viewer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+    viewer.topAnchor.constraint(equalTo: view.topAnchor),
+    viewer.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+])
 ```
 
-## Menjalankan test
+Untuk membuka dokumen setelah view dibuat:
 
-```bash
-scripts/test.sh           # unit test, termasuk fixture paritas web SDK
-scripts/test.sh example   # UI test Example app: geser, hapus, scroll
+```swift
+Task {
+    try await viewer.loadDocument(.file(pdfURL))
+}
 ```
 
-## Keamanan sumber remote
+## Mulai cepat: SwiftUI
 
-URL PDF remote wajib menggunakan HTTPS secara default. Untuk endpoint HTTP lama yang tepercaya
-saja, aktifkan secara eksplisit dengan `PsdkConfig(allowInsecureHttp: true)`. Redirect divalidasi
-kembali dan input PDF dibatasi 100 MiB. Penempatan tanda tangan hanya menghasilkan koordinat;
-proses signing kriptografis dan integritas dokumen tetap harus ditegakkan oleh backend.
+```swift
+import PdfSignatureSDK
+import SwiftUI
 
-## Struktur project
+struct SignScreen: View {
+    @StateObject private var controller = PdfSignatureController(
+        config: PsdkConfig(file: .file(pdfURL))
+    )
+
+    var body: some View {
+        PdfSignatureViewer(controller: controller)
+            .ignoresSafeArea()
+    }
+}
+```
+
+Controller menyediakan `currentPage`, `totalPages`, `currentScale`, dan `signatures` secara
+reaktif.
+
+## Sumber PDF
+
+```swift
+.file(pdfURL)
+.data(pdfData)
+.remote(URL(string: "https://example.com/document.pdf")!)
+.remote(url, headers: ["Authorization": "Bearer <token>"])
+.bundle(name: "example.pdf")
+```
+
+URL PDF remote wajib HTTPS secara default. HTTP hanya boleh diaktifkan untuk endpoint lama yang
+tepercaya:
+
+```swift
+let config = PsdkConfig(allowInsecureHttp: true)
+```
+
+Download dibatasi 100 MiB dan redirect divalidasi ulang. SDK tidak melakukan signing kriptografis;
+proses signing dokumen dan pemeriksaan integritas tetap menjadi tanggung jawab backend.
+
+## Menempatkan item dan mengirim hasil
+
+```swift
+let id = try viewer.placeSignature(
+    PlaceOptions(
+        x: 72,
+        y: 680,
+        page: 1,
+        label: "Direktur",
+        width: 140,
+        height: 60
+    )
+)
+
+try viewer.placeEStamp(PlaceOptions(page: 1, x: 420, y: 700))
+
+let items = viewer.getSignatures()
+let json = try JSONEncoder().encode(items)
+viewer.removeSignature(id)
+```
+
+Koordinat memakai PDF point (1/72 inci), dengan pojok kiri-atas halaman sebagai `(0, 0)` dan
+sumbu Y ke bawah. `page` dimulai dari 1. Ukuran A4 umumnya 595 × 842 point. `SignatureItem` juga
+memiliki `yFromBottom(pageHeight)` untuk library PDF yang memakai titik awal kiri-bawah.
+
+## Event dan state
+
+```swift
+let subscription = viewer.on(.signaturePlaced) { event in
+    if case let .signaturePlaced(item) = event {
+        sendToBackend(item)
+    }
+}
+
+// Panggil saat screen tidak lagi membutuhkan listener.
+viewer.off(subscription)
+```
+
+Event yang tersedia antara lain `documentLoaded`, `pageChanged`, `signaturePlaced`, `eStampPlaced`,
+`signatureMoved`, `signatureRemoved`, `signaturesCleared`, dan `passwordRequested`. Pengguna UIKit
+juga dapat memakai `PdfSignatureViewDelegate`; pengguna Combine dapat mengumpulkan
+`eventsPublisher`.
+
+## Konfigurasi dan keamanan
+
+`PsdkConfig` mengatur tema, label, picker, zoom awal, kunci item, layout UI, warna, tipografi, dan
+`secureScreen`. Set `secureScreen: true` untuk mencegah screenshot dan rekam layar saat viewer
+terlihat.
+
+Untuk PDF berpassword, gunakan dialog bawaan atau tangani event sendiri:
+
+```swift
+viewer.on(.passwordRequested) { event in
+    if case let .passwordRequested(request) = event {
+        request.updatePassword(passwordFromYourUI)
+    }
+}
+```
+
+Password tidak dimasukkan ke deskripsi event atau state viewer.
+
+## Struktur project dan test
 
 | Path | Isi |
 |---|---|
-| `Sources/PdfSignatureSDK` | Library utama |
-| `Tests/PdfSignatureSDKTests` | Unit test, termasuk fixture paritas web SDK (`Parity/`) |
-| `Example/` | Aplikasi demo dan UI test-nya (`project.yml` → `PdfSignatureExample.xcodeproj` hasil generate) |
-| `parity/` | Asal fixture paritas |
-| `scripts/test.sh` | Menjalankan test di simulator iPhone pertama yang tersedia |
+| `Sources/PdfSignatureSDK` | Library iOS |
+| `Tests/PdfSignatureSDKTests` | Unit test dan fixture paritas web |
+| `Example/` | Demo app dan UI test |
+| `parity/` | Sumber fixture paritas |
+| `scripts/test.sh` | Script untuk menjalankan test |
 
-## Kontribusi
-
-Lihat [CONTRIBUTING.md](CONTRIBUTING.md).
+```bash
+scripts/test.sh
+scripts/test.sh example
+```
 
 ## Lisensi
 

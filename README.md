@@ -4,45 +4,51 @@
 ![iOS 14+](https://img.shields.io/badge/iOS-14%2B-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-Native iOS (Swift) PDF viewer that lets users place, drag, resize and remove
-**signature** and **E-Materai** boxes on a document. Positions are returned in
-**PDF points**, exactly like the web SDK
-[`pdf-signature-esign-sdk`](https://www.npmjs.com/package/pdf-signature-esign-sdk) v1.1.2,
-so the same backend can complete the signing.
+Native iOS PDF viewer for placing **signatures** and **E-Materai** on a document. Users can add,
+drag, resize, lock, and remove items. The SDK returns positions in PDF points, so the same payload
+can be sent to the backend used by the web and Android SDKs.
 
-> 🚧 **Preview.** The native viewer is usable and the public API is under stabilization; it is not
-> yet a 1.0.0 release.
+The Android and iOS SDKs expose the same core concepts: PDF source, item placement, events,
+coordinates, JSON/Codable output, and backend signing. Only the UI integration is platform-specific.
 
-Bahasa Indonesia: [README.id.md](README.id.md)
+> Preview: the viewer and Example app are usable, but the public API may still change before 1.0.0.
 
-Documentation: [DOCUMENTATION.en.md](DOCUMENTATION.en.md) · [Dokumentasi Bahasa Indonesia](DOCUMENTATION.id.md)
+Languages and full API documentation:
 
-## Features
+- [Bahasa Indonesia](README.id.md)
+- [English documentation](DOCUMENTATION.en.md)
+- [Dokumentasi Bahasa Indonesia](DOCUMENTATION.id.md)
 
-- PDF rendering with PDFKit, pagination, zoom, page fitting and page rendering
-- Signature and E-Materai placement with drag, resize, delete and per-item locks
-- Web-parity methods, events, JSON output, picker options and skeleton overlay
-- Password-protected PDFs
-- Configurable labels, item locks and secure screen (theme, colors and toolbar options are not applied yet)
-- UIKit view plus a SwiftUI wrapper
-- No third-party dependencies
+## What it provides
+
+- PDFKit rendering, pagination, thumbnails, zoom, fit-to-screen, and fit-to-width.
+- Signature and E-Materai placement with drag, resize, delete, and per-item locks.
+- Swift API, event handlers, Combine publisher, and `Codable` output.
+- UIKit `PdfSignatureView` (`UIView`) and a SwiftUI wrapper.
+- Password-protected PDFs, custom labels, picker options, skeleton loading, and secure screen.
+- No third-party runtime dependency.
 
 ## Requirements
 
-- iOS 14.0+
-- Xcode 16+ / Swift 5.9+
+| Component | Requirement |
+|---|---|
+| iOS | 14.0+ |
+| Xcode | 16+ |
+| Swift | 5.9+ |
+| UI | UIKit or SwiftUI |
 
 ## Installation
 
 ### Swift Package Manager
 
-In Xcode choose **File → Add Package Dependencies…**, paste
+In Xcode, choose **File → Add Package Dependencies…**, enter:
 
-```
+```text
 https://github.com/FvorY/pdf-signature-sdk-ios
 ```
 
-and choose **Branch: main** (there is no release tag yet). Or in `Package.swift`:
+Select **Branch: main** because there is not a stable release tag yet. The package can also be
+declared in `Package.swift`:
 
 ```swift
 .package(url: "https://github.com/FvorY/pdf-signature-sdk-ios", branch: "main")
@@ -54,53 +60,147 @@ and choose **Branch: main** (there is no release tag yet). Or in `Package.swift`
 pod 'PdfSignatureSDK', :git => 'https://github.com/FvorY/pdf-signature-sdk-ios.git'
 ```
 
-## Usage
+## Quick start: UIKit
+
+`PdfSignatureView` is a `UIView`, so it can be added directly to an existing UIKit screen:
 
 ```swift
 import PdfSignatureSDK
+import UIKit
 
 let viewer = PdfSignatureView(config: PsdkConfig(file: .file(pdfURL)))
+viewer.translatesAutoresizingMaskIntoConstraints = false
 view.addSubview(viewer)
 
-viewer.on(.signaturePlaced) { event in print(event) }
-
-// Later, send the positions to your backend:
-let json = try JSONEncoder().encode(viewer.getSignatures())
+NSLayoutConstraint.activate([
+    viewer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+    viewer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+    viewer.topAnchor.constraint(equalTo: view.topAnchor),
+    viewer.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+])
 ```
 
-Coordinates use the top-left corner of the page as origin, in PDF points
-(1/72 inch), and `x, y` is the top-left corner of the item, the same as the web SDK.
+To load a document after creating the view:
 
-See [DOCUMENTATION.en.md](DOCUMENTATION.en.md) for UIKit integration, all public APIs,
-events, password-protected PDFs, configuration, and backend payload examples.
+```swift
+Task {
+    try await viewer.loadDocument(.file(pdfURL))
+}
+```
 
-### Remote source security
+## Quick start: SwiftUI
 
-Remote PDF URLs require HTTPS by default. For a trusted legacy HTTP endpoint only, opt in
-explicitly with `PsdkConfig(allowInsecureHttp: true)`. Redirects are revalidated and the SDK caps
-PDF input at 100 MiB. Signature placement returns coordinates; cryptographic signing and document
-integrity must still be enforced by the backend.
+```swift
+import PdfSignatureSDK
+import SwiftUI
 
-## Project layout
+struct SignScreen: View {
+    @StateObject private var controller = PdfSignatureController(
+        config: PsdkConfig(file: .file(pdfURL))
+    )
+
+    var body: some View {
+        PdfSignatureViewer(controller: controller)
+            .ignoresSafeArea()
+    }
+}
+```
+
+The controller publishes `currentPage`, `totalPages`, `currentScale`, and `signatures`.
+
+## PDF sources
+
+```swift
+.file(pdfURL)
+.data(pdfData)
+.remote(URL(string: "https://example.com/document.pdf")!)
+.remote(url, headers: ["Authorization": "Bearer <token>"])
+.bundle(name: "example.pdf")
+```
+
+Remote PDF URLs require HTTPS by default. HTTP can be enabled only for a trusted legacy endpoint:
+
+```swift
+let config = PsdkConfig(allowInsecureHttp: true)
+```
+
+Downloads are limited to 100 MiB and redirects are revalidated. The SDK does not perform
+cryptographic signing; document signing and integrity checks belong in the backend.
+
+## Place items and export the result
+
+```swift
+let id = try viewer.placeSignature(
+    PlaceOptions(
+        x: 72,
+        y: 680,
+        page: 1,
+        label: "Director",
+        width: 140,
+        height: 60
+    )
+)
+
+try viewer.placeEStamp(PlaceOptions(page: 1, x: 420, y: 700))
+
+let items = viewer.getSignatures()
+let json = try JSONEncoder().encode(items)
+viewer.removeSignature(id)
+```
+
+Coordinates use PDF points (1/72 inch), with the page's top-left corner as `(0, 0)` and Y
+increasing downward. `page` starts at 1. A4 is commonly 595 × 842 points. `SignatureItem` also
+provides `yFromBottom(pageHeight)` for PDF libraries using a bottom-left origin.
+
+## Events and state
+
+```swift
+let subscription = viewer.on(.signaturePlaced) { event in
+    if case let .signaturePlaced(item) = event {
+        sendToBackend(item)
+    }
+}
+
+// Call this when the screen no longer needs the listener.
+viewer.off(subscription)
+```
+
+Available events include `documentLoaded`, `pageChanged`, `signaturePlaced`, `eStampPlaced`,
+`signatureMoved`, `signatureRemoved`, `signaturesCleared`, and `passwordRequested`. UIKit users
+can also set `PdfSignatureViewDelegate`; Combine users can collect `eventsPublisher`.
+
+## Configuration and security
+
+`PsdkConfig` controls theme, labels, picker options, initial zoom, item locks, UI layout, colors,
+typography, and `secureScreen`. Set `secureScreen: true` to prevent screenshots and screen
+recording while the viewer is visible.
+
+For password-protected PDFs, use the built-in dialog or handle the event yourself:
+
+```swift
+viewer.on(.passwordRequested) { event in
+    if case let .passwordRequested(request) = event {
+        request.updatePassword(passwordFromYourUI)
+    }
+}
+```
+
+Passwords are not included in the event description or viewer state.
+
+## Project layout and tests
 
 | Path | Contents |
 |---|---|
-| `Sources/PdfSignatureSDK` | The library |
-| `Tests/PdfSignatureSDKTests` | Unit tests, including the web SDK parity fixtures (`Parity/`) |
-| `Example/` | Demo app and its UI tests (`project.yml` → generated `PdfSignatureExample.xcodeproj`) |
-| `parity/` | Where the parity fixtures come from |
-| `scripts/test.sh` | Runs the tests on the first available iPhone simulator |
-
-## Running tests
+| `Sources/PdfSignatureSDK` | iOS library |
+| `Tests/PdfSignatureSDKTests` | Unit tests and web parity fixtures |
+| `Example/` | Demo app and UI tests |
+| `parity/` | Parity fixture sources |
+| `scripts/test.sh` | Test runner |
 
 ```bash
-scripts/test.sh           # unit tests, including the web SDK parity fixtures
-scripts/test.sh example   # Example app UI tests: drag, delete, scrolling
+scripts/test.sh
+scripts/test.sh example
 ```
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

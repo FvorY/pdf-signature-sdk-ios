@@ -310,7 +310,9 @@ public struct SignatureItem: Codable, Equatable, Identifiable, Sendable {
 /// Basic viewer configuration. UI configuration is added alongside the native toolbar.
 public struct PsdkConfig {
     public var file: PdfSource?
-    public var scale: Double
+    /// Initial zoom, 0.25–4.0. `nil` (default) fits the page width to the view, like the Android SDK.
+    /// The web SDK defaults to 1.5; coordinates do not depend on the zoom.
+    public var scale: Double?
     /// Remote HTTP is disabled by default. Enable only for a trusted legacy endpoint without TLS.
     public var allowInsecureHttp: Bool
 
@@ -334,7 +336,7 @@ public struct PsdkConfig {
 
     public init(
         file: PdfSource? = nil,
-        scale: Double = 1.0,
+        scale: Double? = nil,
         allowInsecureHttp: Bool = false,
         theme: PsdkThemeMode = .system,
         labels: PsdkLabels = .init(),
@@ -355,7 +357,7 @@ public struct PsdkConfig {
         onUpload: ((PdfSource) async -> UploadDecision)? = nil
     ) {
         self.file = file
-        self.scale = min(max(scale, 0.25), 4.0)
+        self.scale = scale.map { min(max($0, 0.25), 4.0) }
         self.allowInsecureHttp = allowInsecureHttp
         self.theme = theme
         self.labels = labels
@@ -375,66 +377,4 @@ public struct PsdkConfig {
         self.logLevel = logLevel
         self.onUpload = onUpload
     }
-}
-
-public enum PageChangeSource: Sendable {
-    case scroll
-    case api
-}
-
-public enum PsdkEventType: Sendable {
-    case documentLoaded
-    case pageChanged
-    case signaturePlaced
-    case eStampPlaced
-    case signatureMoved
-    case signatureRemoved
-    case signaturesCleared
-    case passwordRequested
-}
-
-public enum PsdkEvent {
-    case documentLoaded(totalPages: Int)
-    case pageChanged(page: Int, total: Int, source: PageChangeSource)
-    case signaturePlaced(SignatureItem)
-    case eStampPlaced(SignatureItem)
-    case signatureMoved(SignatureItem)
-    case signatureRemoved(id: String)
-    case signaturesCleared
-    case passwordRequested(PasswordRequest)
-
-    public var type: PsdkEventType {
-        switch self {
-        case .documentLoaded: return .documentLoaded
-        case .pageChanged: return .pageChanged
-        case .signaturePlaced: return .signaturePlaced
-        case .eStampPlaced: return .eStampPlaced
-        case .signatureMoved: return .signatureMoved
-        case .signatureRemoved: return .signatureRemoved
-        case .signaturesCleared: return .signaturesCleared
-        case .passwordRequested: return .passwordRequested
-        }
-    }
-}
-
-/// Controls the password prompt for a locked PDF.
-@MainActor
-public final class PasswordRequest {
-    public let isIncorrect: Bool
-    private let submit: (String) -> Void
-    private let cancelHandler: () -> Void
-
-    init(isIncorrect: Bool, submit: @escaping (String) -> Void, cancel: @escaping () -> Void) {
-        self.isIncorrect = isIncorrect
-        self.submit = submit
-        cancelHandler = cancel
-    }
-
-    public func updatePassword(_ password: String) { submit(password) }
-    public func cancel() { cancelHandler() }
-}
-
-public final class PsdkSubscription {
-    let id = UUID()
-    init() {}
 }

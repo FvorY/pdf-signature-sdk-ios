@@ -62,7 +62,8 @@ let json = try JSONEncoder().encode(viewer.getSignatures())
 ## Menjalankan test
 
 ```bash
-scripts/test.sh
+scripts/test.sh           # unit test, termasuk fixture paritas web SDK
+scripts/test.sh example   # UI test Example app: geser, hapus, scroll
 ```
 
 ## Keamanan sumber remote
@@ -77,9 +78,9 @@ proses signing kriptografis dan integritas dokumen tetap harus ditegakkan oleh b
 | Path | Isi |
 |---|---|
 | `Sources/PdfSignatureSDK` | Library utama |
-| `Tests/PdfSignatureSDKTests` | Unit test |
-| `Example/` | Aplikasi demo (`project.yml` → `PdfSignatureExample.xcodeproj` hasil generate) |
-| `parity/` | Fixture untuk membandingkan output dengan web SDK |
+| `Tests/PdfSignatureSDKTests` | Unit test, termasuk fixture paritas web SDK (`Parity/`) |
+| `Example/` | Aplikasi demo dan UI test-nya (`project.yml` → `PdfSignatureExample.xcodeproj` hasil generate) |
+| `parity/` | Asal fixture paritas |
 | `scripts/test.sh` | Menjalankan test di simulator iPhone pertama yang tersedia |
 
 ## Kontribusi

@@ -44,3 +44,29 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.fvory.psdk.example
         TARGETED_DEVICE_FAMILY: "1,2"
+
+  # Drives the demo with real touches: drag, delete and scrolling past the overlay.
+  PdfSignatureExampleUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - PdfSignatureExampleUITests
+    dependencies:
+      - target: PdfSignatureExample
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.fvory.psdk.example.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: PdfSignatureExample
+
+schemes:
+  PdfSignatureExample:
+    build:
+      targets:
+        PdfSignatureExample: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - PdfSignatureExampleUITests

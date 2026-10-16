@@ -21,10 +21,12 @@ the app's backend.
 
 ## Requirements
 
-- iOS 14 or newer
-- Xcode 16 or newer
-- Swift 5.9 or newer
-- Apple frameworks: `UIKit` and `PDFKit`
+| | Minimum | Notes |
+|---|---|---|
+| iOS | 14.0 | |
+| Xcode / Swift | 16 / 5.9 | |
+| Installation | Swift Package Manager or CocoaPods | Both are checked in CI (`pod lib lint`, Example app). |
+| Dependencies | none | Apple `UIKit`, `PDFKit` and `Combine` only. |
 
 ## Installation
 
@@ -133,12 +135,18 @@ let stampID = try viewer.placeEStamp(PlaceOptions(
     x: 300,
     y: 120,
     page: 1,
-    label: "Materai 10.000",
     width: 80,
     height: 80,
     locked: true
 ))
 ```
+
+Without both `x` and `y`, the item is centered on the page using the default size (160 × 48 for
+signatures, 80 × 80 for E-Materai), like the web SDK.
+
+On screen, drag an item to move it, drag the handle on its bottom-right corner to resize it, and
+tap the button on its top-right corner to delete it. Touches elsewhere scroll and zoom the PDF.
+VoiceOver reads each item and offers a Delete action.
 
 To open the built-in picker:
 
@@ -153,7 +161,7 @@ Main `PlaceOptions` fields:
 |---|---|
 | `x`, `y` | Top-left position in PDF points |
 | `page` | Page number, starting at 1 |
-| `label` | Label shown on the item |
+| `label` | Signature label (default `"Signature"`). E-Materai is always labelled `"E-Materai"`, like the web SDK |
 | `image` | Signature or E-Materai image |
 | `width`, `height` | Size in PDF points |
 | `disableDrag` / `disableDragging` | Prevent the item from being moved |
@@ -241,7 +249,8 @@ viewer.removeSignature(signatureID)
 viewer.clearSignatures()
 ```
 
-Supported zoom is 0.25 to 4.0. Call `destroy()` when the view is no longer used.
+Supported zoom is 0.25 to 4.0. Without `PsdkConfig(scale:)` the page width fits the view. Call
+`destroy()` when the view is no longer used.
 
 ## Password-protected PDFs
 
@@ -289,7 +298,8 @@ viewer.updateConfig { $0.disabled = true }
 
 The following options exist in `PsdkConfig` but are **not applied yet** by the preview iOS viewer:
 `theme`, `colors`, `typography`, `ui` (toolbar, thumbnails, haptics, built-in password dialog),
-`lockScrollWhenPaginationLocked`, `estampKeepAspectRatio`, `logLevel`, and `onUpload`.
+`estampKeepAspectRatio`, `logLevel`, and `onUpload`. Picker titles use `labels`; the `label` of
+placed items does not (see above).
 Handle the `passwordRequested` event yourself, as shown above.
 
 Remote PDF URLs must use HTTPS by default. HTTP can only be enabled explicitly:
@@ -336,7 +346,8 @@ backend's responsibility.
 ## Running tests from source
 
 ```bash
-scripts/test.sh
+scripts/test.sh           # unit tests, including the web SDK parity fixtures
+scripts/test.sh example   # Example app UI tests: drag, delete, scrolling
 ```
 
 License: MIT.

@@ -13,7 +13,7 @@ final class PdfSignatureSDKTests: XCTestCase {
     }
 
     func testPrivacyManifestIsBundled() {
-        XCTAssertNotNil(Bundle.module.url(forResource: "PrivacyInfo", withExtension: "xcprivacy"))
+        XCTAssertNotNil(PdfSignatureSDK.resourceBundle.url(forResource: "PrivacyInfo", withExtension: "xcprivacy"))
     }
 
     func testRemoteTransportIsSecureByDefault() {

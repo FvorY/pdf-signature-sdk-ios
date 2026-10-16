@@ -86,15 +86,16 @@ integrity must still be enforced by the backend.
 | Path | Contents |
 |---|---|
 | `Sources/PdfSignatureSDK` | The library |
-| `Tests/PdfSignatureSDKTests` | Unit tests |
-| `Example/` | Demo app (`project.yml` → generated `PdfSignatureExample.xcodeproj`) |
-| `parity/` | Fixtures that compare output with the web SDK |
+| `Tests/PdfSignatureSDKTests` | Unit tests, including the web SDK parity fixtures (`Parity/`) |
+| `Example/` | Demo app and its UI tests (`project.yml` → generated `PdfSignatureExample.xcodeproj`) |
+| `parity/` | Where the parity fixtures come from |
 | `scripts/test.sh` | Runs the tests on the first available iPhone simulator |
 
 ## Running tests
 
 ```bash
-scripts/test.sh
+scripts/test.sh           # unit tests, including the web SDK parity fixtures
+scripts/test.sh example   # Example app UI tests: drag, delete, scrolling
 ```
 
 ## Contributing

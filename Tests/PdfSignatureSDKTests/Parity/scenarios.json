@@ -1,0 +1,308 @@
+{
+  "comment": "Actions run by the web SDK (parity/web) and by the SDKs' parity checks. Positions are PDF points. Item ids are not compared. A scenario with \"only\" runs for those PDFs only.",
+  "scale": 1.5,
+  "tolerance": 0.5,
+  "pdfs": [
+    "sample.pdf",
+    "geometry.pdf"
+  ],
+  "scenarios": [
+    {
+      "name": "signature-default",
+      "actions": [
+        {
+          "op": "placeSignature",
+          "opts": {}
+        }
+      ]
+    },
+    {
+      "name": "estamp-default",
+      "actions": [
+        {
+          "op": "placeEStamp",
+          "opts": {}
+        }
+      ]
+    },
+    {
+      "name": "explicit-positions",
+      "actions": [
+        {
+          "op": "placeSignature",
+          "opts": {
+            "page": 1,
+            "x": 100,
+            "y": 200,
+            "label": "Direktur"
+          }
+        },
+        {
+          "op": "placeEStamp",
+          "opts": {
+            "page": 1,
+            "x": 300.5,
+            "y": 50.25
+          }
+        }
+      ]
+    },
+    {
+      "name": "custom-size-still-centered-on-default-size",
+      "actions": [
+        {
+          "op": "placeSignature",
+          "opts": {
+            "width": 200,
+            "height": 60
+          }
+        }
+      ]
+    },
+    {
+      "name": "only-x-given-centers-both",
+      "actions": [
+        {
+          "op": "placeSignature",
+          "opts": {
+            "x": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "lock-flags-and-empty-label",
+      "actions": [
+        {
+          "op": "placeSignature",
+          "opts": {
+            "x": 10,
+            "y": 10,
+            "label": "",
+            "locked": true,
+            "disableResize": true,
+            "disableDrag": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "estamp-label-is-fixed",
+      "actions": [
+        {
+          "op": "placeEStamp",
+          "opts": {
+            "x": 0,
+            "y": 0,
+            "label": "Ignored"
+          }
+        }
+      ]
+    },
+    {
+      "name": "centered-on-every-page",
+      "actions": [
+        {
+          "op": "goToPage",
+          "page": 2
+        },
+        {
+          "op": "placeSignature",
+          "opts": {
+            "page": 2
+          }
+        },
+        {
+          "op": "goToPage",
+          "page": 3
+        },
+        {
+          "op": "placeSignature",
+          "opts": {
+            "page": 3
+          }
+        },
+        {
+          "op": "goToPage",
+          "page": 4
+        },
+        {
+          "op": "placeEStamp",
+          "opts": {
+            "page": 4
+          }
+        },
+        {
+          "op": "goToPage",
+          "page": 5
+        },
+        {
+          "op": "placeSignature",
+          "opts": {
+            "page": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "geometry-centered-on-every-page",
+      "only": [
+        "geometry.pdf"
+      ],
+      "actions": [
+        {
+          "op": "placeSignature",
+          "opts": {
+            "page": 1
+          }
+        },
+        {
+          "op": "placeEStamp",
+          "opts": {
+            "page": 1
+          }
+        },
+        {
+          "op": "goToPage",
+          "page": 2
+        },
+        {
+          "op": "placeSignature",
+          "opts": {
+            "page": 2
+          }
+        },
+        {
+          "op": "placeEStamp",
+          "opts": {
+            "page": 2
+          }
+        },
+        {
+          "op": "goToPage",
+          "page": 3
+        },
+        {
+          "op": "placeSignature",
+          "opts": {
+            "page": 3
+          }
+        },
+        {
+          "op": "placeEStamp",
+          "opts": {
+            "page": 3
+          }
+        },
+        {
+          "op": "goToPage",
+          "page": 4
+        },
+        {
+          "op": "placeSignature",
+          "opts": {
+            "page": 4
+          }
+        },
+        {
+          "op": "placeEStamp",
+          "opts": {
+            "page": 4
+          }
+        },
+        {
+          "op": "goToPage",
+          "page": 5
+        },
+        {
+          "op": "placeSignature",
+          "opts": {
+            "page": 5
+          }
+        },
+        {
+          "op": "placeEStamp",
+          "opts": {
+            "page": 5
+          }
+        },
+        {
+          "op": "goToPage",
+          "page": 6
+        },
+        {
+          "op": "placeSignature",
+          "opts": {
+            "page": 6
+          }
+        },
+        {
+          "op": "placeEStamp",
+          "opts": {
+            "page": 6
+          }
+        },
+        {
+          "op": "goToPage",
+          "page": 7
+        },
+        {
+          "op": "placeSignature",
+          "opts": {
+            "page": 7
+          }
+        },
+        {
+          "op": "placeEStamp",
+          "opts": {
+            "page": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "geometry-explicit-positions",
+      "only": [
+        "geometry.pdf"
+      ],
+      "actions": [
+        {
+          "op": "placeSignature",
+          "opts": {
+            "page": 3,
+            "x": 100,
+            "y": 200,
+            "label": "Rotate 180"
+          }
+        },
+        {
+          "op": "placeSignature",
+          "opts": {
+            "page": 4,
+            "x": 120.5,
+            "y": 30,
+            "label": "Rotate 270"
+          }
+        },
+        {
+          "op": "placeEStamp",
+          "opts": {
+            "page": 6,
+            "x": 50,
+            "y": 60
+          }
+        },
+        {
+          "op": "placeSignature",
+          "opts": {
+            "page": 7,
+            "x": 0,
+            "y": 0,
+            "width": 612,
+            "height": 20
+          }
+        }
+      ]
+    }
+  ]
+}

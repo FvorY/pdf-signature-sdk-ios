@@ -19,10 +19,12 @@ Dokumen ini menjelaskan pemasangan dan penggunaan `PdfSignatureSDK` di aplikasi 
 
 ## Persyaratan
 
-- iOS 14 atau lebih baru
-- Xcode 16 atau lebih baru
-- Swift 5.9 atau lebih baru
-- Framework Apple: `UIKit` dan `PDFKit`
+| | Minimum | Catatan |
+|---|---|---|
+| iOS | 14.0 | |
+| Xcode / Swift | 16 / 5.9 | |
+| Instalasi | Swift Package Manager atau CocoaPods | Keduanya dicek di CI (`pod lib lint`, Example app). |
+| Dependensi | tidak ada | Hanya `UIKit`, `PDFKit`, dan `Combine` dari Apple. |
 
 ## Instalasi
 
@@ -130,12 +132,18 @@ let stampID = try viewer.placeEStamp(PlaceOptions(
     x: 300,
     y: 120,
     page: 1,
-    label: "Materai 10.000",
     width: 80,
     height: 80,
     locked: true
 ))
 ```
+
+Jika `x` dan `y` tidak diisi keduanya, item ditaruh di tengah halaman dengan ukuran default
+(160 × 48 untuk tanda tangan, 80 × 80 untuk E-Materai), sama seperti web SDK.
+
+Di layar, geser item untuk memindahkan, tarik pegangan di pojok kanan-bawah untuk resize, dan tap
+tombol di pojok kanan-atas untuk menghapus. Sentuhan di luar item tetap men-scroll dan zoom PDF.
+VoiceOver membacakan tiap item dan menyediakan aksi Delete.
 
 Untuk membuka picker bawaan:
 
@@ -150,7 +158,7 @@ Opsi `PlaceOptions` yang penting:
 |---|---|
 | `x`, `y` | Posisi kiri-atas dalam PDF point |
 | `page` | Nomor halaman, dimulai dari 1 |
-| `label` | Label item yang ditampilkan |
+| `label` | Label tanda tangan (default `"Signature"`). E-Materai selalu berlabel `"E-Materai"`, sama seperti web SDK |
 | `image` | Gambar tanda tangan atau E-Materai |
 | `width`, `height` | Ukuran dalam PDF point |
 | `disableDrag` / `disableDragging` | Mencegah item digeser |
@@ -236,7 +244,8 @@ viewer.removeSignature(signatureID)
 viewer.clearSignatures()
 ```
 
-Zoom yang didukung 0,25 sampai 4,0. Panggil `destroy()` saat view tidak lagi digunakan.
+Zoom yang didukung 0,25 sampai 4,0. Tanpa `PsdkConfig(scale:)`, lebar halaman menyesuaikan view.
+Panggil `destroy()` saat view tidak lagi digunakan.
 
 ## PDF password
 
@@ -284,7 +293,8 @@ viewer.updateConfig { $0.disabled = true }
 
 Opsi berikut sudah ada di `PsdkConfig` tetapi **belum diterapkan** oleh viewer iOS versi preview:
 `theme`, `colors`, `typography`, `ui` (toolbar, thumbnail, haptic, dialog password bawaan),
-`lockScrollWhenPaginationLocked`, `estampKeepAspectRatio`, `logLevel`, dan `onUpload`.
+`estampKeepAspectRatio`, `logLevel`, dan `onUpload`. Judul picker memakai `labels`; `label` item
+yang ditaruh tidak (lihat di atas).
 Karena itu, tangani event `passwordRequested` sendiri seperti contoh di atas.
 
 URL PDF remote harus HTTPS secara default. HTTP hanya dapat diaktifkan secara eksplisit:
@@ -330,7 +340,8 @@ Validasi identitas, koordinat, integritas dokumen, dan proses kriptografis tetap
 ## Menjalankan test dari source
 
 ```bash
-scripts/test.sh
+scripts/test.sh           # unit test, termasuk fixture paritas web SDK
+scripts/test.sh example   # UI test Example app: geser, hapus, scroll
 ```
 
 Lisensi: MIT.

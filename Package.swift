@@ -17,7 +17,9 @@ let package = Package(
         ),
         .testTarget(
             name: "PdfSignatureSDKTests",
-            dependencies: ["PdfSignatureSDK"]
+            dependencies: ["PdfSignatureSDK"],
+            // Same fixtures as the Android SDK (parity/README.md)
+            resources: [.copy("Parity")]
         ),
     ]
 )

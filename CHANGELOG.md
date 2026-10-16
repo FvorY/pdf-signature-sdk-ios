@@ -7,6 +7,12 @@ project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Web SDK parity tests with the same fixtures as the Android SDK (`Tests/.../Parity`): page sizes and
+  item positions for `sample.pdf` and `geometry.pdf` (/Rotate 0/90/180/270, CropBox, MediaBox offset).
+- Example app is a working demo (bundled PDF, pickers, locks, JSON) with UI tests for drag, delete
+  and scrolling under the overlay. CI runs them.
+- VoiceOver: one element per visible item with a Delete action.
+- `lockScrollWhenPaginationLocked` is applied.
 - Swift package skeleton (`PdfSignatureSDK`, iOS 14+), privacy manifest, unit test target.
 - Preview `PdfSignatureView` UIKit API, SwiftUI controller/wrapper, PDF loading, pagination,
   zoom, password events, signature placement and interactive item overlay.
@@ -17,3 +23,25 @@ project uses [Semantic Versioning](https://semver.org/).
 - English and Indonesian usage guides (`DOCUMENTATION.en.md`, `DOCUMENTATION.id.md`).
 - Example app generated with XcodeGen.
 - GitHub Actions: SwiftLint, unit tests, Example build, `pod lib lint`, tag release.
+
+### Fixed
+- The item overlay took every touch, so the PDF could not be scrolled or zoomed. Touches now only
+  go to the overlay when they start on an item.
+- Items did not follow the page while scrolling or zooming, and only the current page's items were
+  drawn. The overlay now redraws on scroll and zoom and draws items on every visible page.
+- Items on /Rotate 90/180/270 pages were drawn in the wrong place; `renderPage` ignored /Rotate.
+- Scrolling never changed the current page (`pageChanged` was never sent for scrolling).
+- Tapping the delete button did nothing; the delete and resize controls overlapped on small items.
+- `once` listeners could fire more than once; downloads kept their URL session alive.
+- Local files were read on the main thread.
+- The SDK did not build with CocoaPods (`Bundle.module` only exists with Swift Package Manager).
+- SwiftLint failures that made CI fail.
+
+### Changed
+- Placement matches the web SDK: items are centered unless both `x` and `y` are given, E-Materai is
+  always labelled "E-Materai", a signature without a label is "Signature" (`labels` only changes
+  picker titles), and ids end in 5 random base-36 characters.
+- `pageSize` rounds like the web SDK (A4 is 594.67 × 841.33).
+- `PsdkConfig.scale` is optional; `nil` (default) fits the page width, like the Android SDK.
+- `pdfViewPageChanged(_:)` is no longer public.
+

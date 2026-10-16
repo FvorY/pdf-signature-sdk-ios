@@ -24,7 +24,7 @@ memakai bagian yang sama. English: [DOCUMENTATION.en.md](DOCUMENTATION.en.md).
 14. [Gambar halaman](#14-gambar-halaman)
 15. [Perlindungan layar](#15-perlindungan-layar)
 16. [Error](#16-error)
-17. [Lifecycle](#17-lifecycle)
+17. [Lifecycle dan pemulihan state](#17-lifecycle-dan-pemulihan-state)
 18. [Semua opsi](#18-semua-opsi)
 19. [Perbedaan platform](#19-perbedaan-platform)
 20. [Build dari source](#20-build-dari-source)
@@ -355,7 +355,7 @@ Berguna untuk pratinjau atau layar konfirmasi. Gambar mengikuti /Rotate seperti 
 empty state menampilkan pesan singkat; dengan `logLevel: .debug` juga menampilkan error-nya, dan
 SDK menulis detail ke log (subsystem `io.github.fvory.psdk`).
 
-## 17. Lifecycle
+## 17. Lifecycle dan pemulihan state
 
 - Dengan SwiftUI, simpan controller di `@StateObject` supaya viewer hidup selama layar ada.
 - Panggil `destroy()` bila `PdfSignatureView` tidak dipakai lagi: dokumen ditutup, listener dan

@@ -24,7 +24,7 @@ has the same sections. Bahasa Indonesia: [DOCUMENTATION.id.md](DOCUMENTATION.id.
 14. [Page images](#14-page-images)
 15. [Screen protection](#15-screen-protection)
 16. [Errors](#16-errors)
-17. [Lifecycle](#17-lifecycle)
+17. [Lifecycle and restoring state](#17-lifecycle-and-restoring-state)
 18. [All options](#18-all-options)
 19. [Platform differences](#19-platform-differences)
 20. [Building from source](#20-building-from-source)
@@ -353,7 +353,7 @@ Useful for previews or a confirmation screen. Images follow /Rotate like the vie
 shows a short message; with `logLevel: .debug` it also shows the error, and the SDK logs details
 (subsystem `io.github.fvory.psdk`).
 
-## 17. Lifecycle
+## 17. Lifecycle and restoring state
 
 - With SwiftUI, keep the controller in `@StateObject` so the viewer lives as long as the screen.
 - Call `destroy()` when a `PdfSignatureView` is no longer used: it closes the document, removes

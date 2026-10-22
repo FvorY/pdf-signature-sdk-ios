@@ -7,6 +7,9 @@ project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- `PsdkConfig.defaultPosition` (`PlacementPosition(x:y:)`): the add buttons and pickers place new items
+  at a fixed top-left position (kept inside the page) instead of the page center, so no dragging is needed.
+  `placeSignature` / `placeEStamp` are unchanged.
 - Built-in viewer UI matching the Android SDK: phone layout (top bar with ⋯ menu, scrollable bottom
   bar, floating "‹ 1 / 5 ›" page indicator, thumbnail strip) and tablet layout (web-style toolbar,
   thumbnail sidebar), status line with item count, zoom and 🔒 badge, empty state with upload button

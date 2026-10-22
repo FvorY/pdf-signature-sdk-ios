@@ -26,6 +26,19 @@ extension PdfSignatureView {
         openPicker(type: .estamp)
     }
 
+    /// Applies `config.defaultPosition` to a placement started from the UI, clamped inside the page.
+    func positioned(_ type: ItemType, _ options: PlaceOptions) -> PlaceOptions {
+        guard let position = config.defaultPosition,
+              let size = getPageSize(options.page ?? currentPage) else { return options }
+        let isStamp = type == .estamp
+        let width = options.width ?? (isStamp ? Self.estampSize : Self.signatureWidth)
+        let height = options.height ?? (isStamp ? Self.estampSize : Self.signatureHeight)
+        var result = options
+        result.x = min(max(position.x, 0), max(0, Double(size.width) - width))
+        result.y = min(max(position.y, 0), max(0, Double(size.height) - height))
+        return result
+    }
+
     /// Places an item the way the web SDK does: centered on the page (using the default size) unless
     /// both `x` and `y` are given, and E-Materai always labelled "E-Materai".
     func place(type: ItemType, options: PlaceOptions) throws -> String {

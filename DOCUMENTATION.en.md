@@ -150,6 +150,23 @@ the web SDK (A4 is 594.67 × 841.33).
 
 The add buttons and pickers of the built-in UI are described in §10.
 
+### Starting position from the add buttons
+
+By default the add buttons and pickers (and `openSignatureModal()` / `openEStampModal()`) put a new
+item in the center of the page, and the user drags it. Set `defaultPosition` to place it at a fixed
+position instead, with no dragging needed:
+
+```swift
+PsdkConfig(defaultPosition: PlacementPosition(x: 10, y: 20)) // top-left corner, PDF points
+// or later: viewer.updateConfig { $0.defaultPosition = PlacementPosition(x: 10, y: 20) }
+```
+
+- `x`, `y` use the same coordinates as `PlaceOptions` (top-left origin, Y down, PDF points).
+- The item is kept inside the page: a position beyond the page edge is pulled back so the whole item fits.
+- It applies to the current page, to signatures and E-Materai, and to items chosen from a picker.
+- `null` (default) keeps the centered placement.
+- `placeSignature` / `placeEStamp` are not affected: their own `x`, `y` always win.
+
 ## 5. Editing on screen
 
 - Drag an item to move it; drag the handle on its bottom-right corner to resize it (at least
@@ -383,6 +400,7 @@ shows a short message; with `logLevel: .debug` it also shows the error, and the 
 | `disabled`, `disableDragging`, `disableDrag`, `disableResize` | `false` | §5 |
 | `estampKeepAspectRatio` | `false` | §5 |
 | `signatureOptions`, `estampOptions`, `groupByCategory` | empty, `false` | §10 |
+| `defaultPosition` | `null` (centered) | §4 |
 | `onUpload` | `nil` (open the picked file) | §12 |
 | `lockScrollWhenPaginationLocked` | `false` | §8 |
 | `secureScreen` | `false` | §15 |

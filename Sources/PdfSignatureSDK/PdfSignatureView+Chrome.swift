@@ -54,7 +54,7 @@ extension PdfSignatureView {
         let isSignature = type == .signature
         let options = isSignature ? config.signatureOptions : config.estampOptions
         guard !options.isEmpty else {
-            _ = try? place(type: type, options: .init())
+            _ = try? place(type: type, options: positioned(type, PlaceOptions()))
             return
         }
         guard let presenter = nearestViewController else { return }
@@ -70,7 +70,8 @@ extension PdfSignatureView {
                 let label = ChromeRules.optionLabel(option, isSignature: isSignature, labels: labels)
                 let title = group.isEmpty ? label : "\(group) · \(label)"
                 alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
-                    _ = try? self?.place(type: type, options: PlaceOptions(label: option.label, image: option.image))
+                    guard let self else { return }
+                    _ = try? self.place(type: type, options: self.positioned(type, PlaceOptions(label: option.label, image: option.image)))
                 })
             }
         }

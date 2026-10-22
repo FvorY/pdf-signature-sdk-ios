@@ -37,6 +37,28 @@ final class ViewerTests: XCTestCase {
         )
     }
 
+    func testDefaultPositionPlacesUiAddedItemsWithoutDragging() async throws {
+        let viewer = try await loadedViewer("sample.pdf")
+        let size = try XCTUnwrap(viewer.getPageSize(1))
+        viewer.updateConfig { $0.defaultPosition = PlacementPosition(x: 10, y: 20) }
+        viewer.openSignatureModal()
+        viewer.openEStampModal()
+        let items = viewer.getSignatures()
+        XCTAssertEqual(items.count, 2)
+        XCTAssertEqual(items[0].x, 10, accuracy: 0.0001)
+        XCTAssertEqual(items[0].y, 20, accuracy: 0.0001)
+        XCTAssertEqual(items[1].x, 10, accuracy: 0.0001)
+        viewer.updateConfig { $0.defaultPosition = PlacementPosition(x: 9999, y: 9999) }
+        viewer.openSignatureModal()
+        let clamped = try XCTUnwrap(viewer.getSignatures().last)
+        XCTAssertEqual(clamped.x, Double(size.width) - clamped.width, accuracy: 0.0001)
+        XCTAssertEqual(clamped.y, Double(size.height) - clamped.height, accuracy: 0.0001)
+        viewer.updateConfig { $0.defaultPosition = nil }
+        viewer.openSignatureModal()
+        let centered = try XCTUnwrap(viewer.getSignatures().last)
+        XCTAssertEqual(centered.x, Double(size.width) / 2 - centered.width / 2, accuracy: 0.0001)
+    }
+
     func testWebParityScenarios() async throws {
         let config = try json("scenarios.json")
         let tolerance = try XCTUnwrap(config["tolerance"] as? Double)

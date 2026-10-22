@@ -189,6 +189,11 @@ public struct PsdkConfig {
     public var labels: PsdkLabels
     public var ui: PsdkUiConfig
     public var logLevel: PsdkLogLevel
+    /// Where the add buttons and pickers place a new item, so the user does not have to drag it.
+    /// `nil` (default) centers it on the page. Origin is the top-left corner of the page in PDF points,
+    /// like `PlaceOptions.x`/`y`; the item is kept inside the page. `placeSignature`/`placeEStamp`
+    /// are not affected: they use their own options.
+    public var defaultPosition: PlacementPosition?
 
     public init(
         file: PdfSource? = nil,
@@ -211,7 +216,8 @@ public struct PsdkConfig {
         secureScreen: Bool = false,
         labels: PsdkLabels = .init(),
         ui: PsdkUiConfig = .init(),
-        logLevel: PsdkLogLevel = .error
+        logLevel: PsdkLogLevel = .error,
+        defaultPosition: PlacementPosition? = nil
     ) {
         self.file = file
         self.allowInsecureHttp = allowInsecureHttp
@@ -234,6 +240,18 @@ public struct PsdkConfig {
         self.labels = labels
         self.ui = ui
         self.logLevel = logLevel
+        self.defaultPosition = defaultPosition
+    }
+}
+
+/// Top-left position of an item on its page, in PDF points (origin top-left, y grows downward).
+public struct PlacementPosition: Equatable, Sendable {
+    public var x: Double
+    public var y: Double
+
+    public init(x: Double, y: Double) {
+        self.x = x
+        self.y = y
     }
 }
 

@@ -1,9 +1,9 @@
 import Foundation
-import XCTest
 @testable import PdfSignatureSDK
+import XCTest
 #if canImport(UIKit) && canImport(PDFKit)
-import UIKit
 import PDFKit
+import UIKit
 #endif
 
 final class InitSignDocumentTests: XCTestCase {

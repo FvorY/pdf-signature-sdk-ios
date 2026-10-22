@@ -1,8 +1,8 @@
 import CoreGraphics
 import PDFKit
+@testable import PdfSignatureSDK
 import UIKit
 import XCTest
-@testable import PdfSignatureSDK
 
 struct PdfPageImage {
     let pageSize: CGSize

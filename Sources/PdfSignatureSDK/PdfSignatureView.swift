@@ -31,6 +31,7 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
     let pdfView = PDFView()
     let overlayView = ItemOverlayView()
     lazy var chrome = ChromeView(owner: self)
+    var signingDocumentData: Data?
     var document: PDFDocument?
     var items: [SignatureItem] = []
     var itemImages: [String: UIImage] = [:]
@@ -108,6 +109,7 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
         loadToken += 1
         let token = loadToken
         isLoading = true
+        signingDocumentData = nil
         lastError = nil
         chrome.refresh()
         defer {
@@ -121,6 +123,7 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
             guard let loaded = PDFDocument(data: data) else { throw PsdkError.invalidDocument }
             if loaded.isLocked { try await unlock(loaded, token: token) }
             guard token == loadToken, !isDestroyed else { return }
+            signingDocumentData = data
             show(loaded)
             log(.debug, "Loaded \(loaded.pageCount) pages")
         } catch {
@@ -189,6 +192,7 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
 
     /// Back to the empty state, e.g. after a cancelled password prompt.
     private func closeDocument() {
+        signingDocumentData = nil
         document = nil
         pdfView.document = nil
         totalPages = 0
@@ -303,6 +307,7 @@ public final class PdfSignatureView: UIView, PDFViewDelegate {
         guard !isDestroyed else { return }
         isDestroyed = true
         pdfView.document = nil
+        signingDocumentData = nil
         document = nil
         answerPassword(nil, id: pendingPassword?.id)
         items.removeAll()

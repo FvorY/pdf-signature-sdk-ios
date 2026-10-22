@@ -11,7 +11,9 @@ extension PdfSignatureView {
         guard let page = document?.page(at: item.page - 1) else { return nil }
         let box = CGRect(x: item.x, y: item.y, width: item.width, height: item.height)
         let rect = PageGeometry.pageRect(box, bounds: page.bounds(for: .cropBox), rotation: page.rotation)
-        return convert(pdfView.convert(rect, from: page), from: pdfView)
+        // The overlay draws in its own coordinates and is pinned to the same area as pdfView (below the top bar),
+        // so converting to `self` would shift every item down by the top bar's height.
+        return overlayView.convert(pdfView.convert(rect, from: page), from: pdfView)
     }
 
     /// One-based numbers of the pages PDFView shows right now.

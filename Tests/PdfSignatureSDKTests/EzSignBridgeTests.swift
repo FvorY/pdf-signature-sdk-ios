@@ -71,8 +71,6 @@ final class EzSignBridgeTests: XCTestCase {
                     let goldenURL = try XCTUnwrap(Bundle.module.url(forResource: "Parity/flutter-crop.png", withExtension: nil))
                     let goldenImage = try XCTUnwrap(UIImage(data: Data(contentsOf: goldenURL)))
                     XCTAssertEqual(try pixels(image), try pixels(goldenImage))
-                    try image.pngData()?.write(to: URL(fileURLWithPath:
-                        "/Users/developersign/Downloads/ezSign-sdk-evaluation/sdk-crop.png"))
                 }
                 let adapter = try XCTUnwrap(PdfSdkCoordinateAdapter(page: page))
                 try viewer.placeSignature(PlaceOptions(x: 51.125, y: 83.375, page: index + 1, width: 143.625, height: 57.875))

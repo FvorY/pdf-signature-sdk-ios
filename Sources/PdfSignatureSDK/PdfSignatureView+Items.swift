@@ -27,8 +27,8 @@ extension PdfSignatureView {
     }
 
     /// Applies `config.defaultPosition` to a placement started from the UI, clamped inside the page.
-    func positioned(_ type: ItemType, _ options: PlaceOptions) -> PlaceOptions {
-        guard let position = config.defaultPosition,
+    func positioned(_ type: ItemType, _ options: PlaceOptions, at position: PlacementPosition? = nil) -> PlaceOptions {
+        guard let position = position ?? config.defaultPosition,
               let size = getPageSize(options.page ?? currentPage) else { return options }
         let isStamp = type == .estamp
         let width = options.width ?? (isStamp ? Self.estampSize : Self.signatureWidth)

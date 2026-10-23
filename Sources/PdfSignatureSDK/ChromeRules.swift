@@ -65,6 +65,29 @@ enum ChromeRules {
 
     static func zoomPercent(_ scale: CGFloat) -> String { "\(Int((scale * 100).rounded()))%" }
 
+    /// Outcome of the position dialog fields.
+    enum PositionInput: Equatable {
+        case center
+        case position(x: Double, y: Double)
+        case invalid
+    }
+
+    /// A non-negative finite number, `,` accepted as the decimal separator; `nil` for blank or invalid text.
+    static func parseCoordinate(_ text: String) -> Double? {
+        let cleaned = text.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".")
+        guard let value = Double(cleaned), value.isFinite, value >= 0 else { return nil }
+        return value
+    }
+
+    /// Both empty: center (or the default position). Both numbers: that position. Anything else: invalid.
+    static func positionInput(x: String, y: String) -> PositionInput {
+        let blankX = x.trimmingCharacters(in: .whitespaces).isEmpty
+        let blankY = y.trimmingCharacters(in: .whitespaces).isEmpty
+        if blankX && blankY { return .center }
+        guard let left = parseCoordinate(x), let top = parseCoordinate(y) else { return .invalid }
+        return .position(x: left, y: top)
+    }
+
     /// Parsed page number, or `nil` when the text is not a number.
     static func parsePage(_ text: String) -> Int? { Int(text.trimmingCharacters(in: .whitespaces)) }
 

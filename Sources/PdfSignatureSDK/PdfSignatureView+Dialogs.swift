@@ -66,6 +66,56 @@ extension PdfSignatureView {
         presenter.present(alert, animated: true)
     }
 
+    /// A placement started from the UI: with `askPositionOnAdd` ask for X/Y first, otherwise place it
+    /// right away at `defaultPosition` or the page center.
+    func startPlacement(type: ItemType, options: PlaceOptions) {
+        guard config.askPositionOnAdd else {
+            _ = try? place(type: type, options: positioned(type, options))
+            return
+        }
+        guard let presenter = nearestViewController, let size = getPageSize(options.page ?? currentPage) else { return }
+        let labels = config.labels
+        let pageSize = String(
+            format: labels.positionPageSize,
+            Self.formatPoints(Double(size.width)),
+            Self.formatPoints(Double(size.height))
+        )
+        let description = "\(labels.positionModalDesc)\n\(pageSize)"
+        let alert = UIAlertController(title: labels.positionModalTitle, message: description, preferredStyle: .alert)
+        for placeholder in [labels.positionX, labels.positionY] {
+            alert.addTextField { field in
+                field.keyboardType = .decimalPad
+                field.placeholder = placeholder
+            }
+        }
+        let place = UIAlertAction(title: labels.placeBtn, style: .default) { [weak self, weak alert] _ in
+            guard let self, let fields = alert?.textFields, fields.count == 2 else { return }
+            let input = ChromeRules.positionInput(x: fields[0].text ?? "", y: fields[1].text ?? "")
+            switch input {
+            case .center: _ = try? self.place(type: type, options: self.positioned(type, options))
+            case let .position(x, y):
+                let target = PlacementPosition(x: x, y: y)
+                _ = try? self.place(type: type, options: self.positioned(type, options, at: target))
+            case .invalid: break
+            }
+        }
+        alert.addAction(UIAlertAction(title: labels.cancelBtn, style: .cancel))
+        alert.addAction(place)
+        // "Place" stays disabled while the fields are neither both empty nor both numbers
+        let refresh = UIAction { [weak alert, weak place] _ in
+            guard let fields = alert?.textFields, fields.count == 2 else { return }
+            let input = ChromeRules.positionInput(x: fields[0].text ?? "", y: fields[1].text ?? "")
+            place?.isEnabled = input != .invalid
+            alert?.message = input == .invalid ? labels.positionInvalid : description
+        }
+        alert.textFields?.forEach { $0.addAction(refresh, for: .editingChanged) }
+        presenter.present(alert, animated: true)
+    }
+
+    static func formatPoints(_ value: Double) -> String {
+        value.truncatingRemainder(dividingBy: 1) == 0 ? String(Int(value)) : String(format: "%.2f", value)
+    }
+
     /// Built-in password dialog (`ui.passwordDialog`). The `passwordRequested` event is sent either way.
     func presentPasswordDialog(_ request: PasswordRequest) {
         guard config.ui.passwordDialog, let presenter = nearestViewController else { return }

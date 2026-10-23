@@ -53,6 +53,13 @@ public struct PsdkLabels: Sendable {
     public var a11ySmaller = "Make smaller"
     public var a11yPage = "Page %d of %d"
     public var errorLoad = "Failed to open document"
+    public var positionModalTitle = "Signature position"
+    public var positionModalDesc = "Enter the top-left corner in PDF points. Leave both empty to place it at the center of the page."
+    public var positionX = "X (pt)"
+    public var positionY = "Y (pt)"
+    public var positionPageSize = "Page %@ x %@ pt"
+    public var positionInvalid = "Enter both X and Y as numbers, or leave both empty."
+    public var placeBtn = "Place"
 
     public init() {}
 
@@ -98,6 +105,13 @@ public struct PsdkLabels: Sendable {
         labels.a11ySmaller = "Perkecil"
         labels.a11yPage = "Halaman %d dari %d"
         labels.errorLoad = "Gagal membuka dokumen"
+        labels.positionModalTitle = "Posisi tanda tangan"
+        labels.positionModalDesc = "Isi pojok kiri atas dalam PDF point. Kosongkan keduanya untuk menempatkan di tengah halaman."
+        labels.positionX = "X (pt)"
+        labels.positionY = "Y (pt)"
+        labels.positionPageSize = "Halaman %@ x %@ pt"
+        labels.positionInvalid = "Isi X dan Y dengan angka, atau kosongkan keduanya."
+        labels.placeBtn = "Tempatkan"
         return labels
     }
 }

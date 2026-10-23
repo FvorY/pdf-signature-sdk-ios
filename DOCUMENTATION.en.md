@@ -167,6 +167,25 @@ PsdkConfig(defaultPosition: PlacementPosition(x: 10, y: 20)) // top-left corner,
 - `null` (default) keeps the centered placement.
 - `placeSignature` / `placeEStamp` are not affected: their own `x`, `y` always win.
 
+### Ask for the position first
+
+With `askPositionOnAdd` on, tapping an add button (and choosing a role or option, if there is a picker)
+opens a built-in dialog before the item is placed. The dialog has an **X** and a **Y** field (PDF points,
+top-left origin) and starts empty:
+
+```swift
+PsdkConfig(askPositionOnAdd: true)
+// or later: viewer.updateConfig { $0.askPositionOnAdd = true }
+```
+
+- Both fields filled: the item is placed at that position, kept inside the page.
+- Both empty: the item is placed at `defaultPosition`, or at the center of the page when that is not set.
+  Use this when the user does not want to type coordinates.
+- Only one filled, or text that is not a number: "Place" stays disabled and the dialog explains why.
+- Cancel (or tapping outside): nothing is added.
+- Off by default: the item is placed right away. `placeSignature` / `placeEStamp` never show the dialog.
+- Texts: `PsdkLabels.positionModalTitle`, `positionModalDesc`, `positionX`, `positionY`, `positionPageSize`, `positionInvalid` and `placeBtn`.
+
 ## 5. Editing on screen
 
 - Drag an item to move it; drag the handle on its bottom-right corner to resize it (at least
@@ -401,6 +420,7 @@ shows a short message; with `logLevel: .debug` it also shows the error, and the 
 | `estampKeepAspectRatio` | `false` | §5 |
 | `signatureOptions`, `estampOptions`, `groupByCategory` | empty, `false` | §10 |
 | `defaultPosition` | `null` (centered) | §4 |
+| `askPositionOnAdd` | `false` | §4 |
 | `onUpload` | `nil` (open the picked file) | §12 |
 | `lockScrollWhenPaginationLocked` | `false` | §8 |
 | `secureScreen` | `false` | §15 |

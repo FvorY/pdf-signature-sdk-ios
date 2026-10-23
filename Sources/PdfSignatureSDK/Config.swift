@@ -194,6 +194,11 @@ public struct PsdkConfig {
     /// like `PlaceOptions.x`/`y`; the item is kept inside the page. `placeSignature`/`placeEStamp`
     /// are not affected: they use their own options.
     public var defaultPosition: PlacementPosition?
+    /// Asks for the position before an item from the add buttons is placed: the built-in dialog takes
+    /// X and Y (PDF points, origin top-left). Both fields empty places the item at `defaultPosition`
+    /// or the page center; Cancel adds nothing. Off by default: the item is placed right away.
+    /// `placeSignature`/`placeEStamp` are not affected.
+    public var askPositionOnAdd: Bool
 
     public init(
         file: PdfSource? = nil,
@@ -217,7 +222,8 @@ public struct PsdkConfig {
         labels: PsdkLabels = .init(),
         ui: PsdkUiConfig = .init(),
         logLevel: PsdkLogLevel = .error,
-        defaultPosition: PlacementPosition? = nil
+        defaultPosition: PlacementPosition? = nil,
+        askPositionOnAdd: Bool = false
     ) {
         self.file = file
         self.allowInsecureHttp = allowInsecureHttp
@@ -241,6 +247,7 @@ public struct PsdkConfig {
         self.ui = ui
         self.logLevel = logLevel
         self.defaultPosition = defaultPosition
+        self.askPositionOnAdd = askPositionOnAdd
     }
 }
 

@@ -10,6 +10,10 @@ project uses [Semantic Versioning](https://semver.org/).
 - `PsdkConfig.defaultPosition` (`PlacementPosition(x:y:)`): the add buttons and pickers place new items
   at a fixed top-left position (kept inside the page) instead of the page center, so no dragging is needed.
   `placeSignature` / `placeEStamp` are unchanged.
+- `PsdkConfig.askPositionOnAdd`: the add buttons open a built-in dialog with X and Y (PDF points) before the
+  item is placed. Both fields empty places it at `defaultPosition` or the page center; Cancel adds nothing.
+  Off by default. New `PsdkLabels` texts: `positionModalTitle`, `positionModalDesc`, `positionX`, `positionY`,
+  `positionPageSize`, `positionInvalid`, `placeBtn`.
 - Built-in viewer UI matching the Android SDK: phone layout (top bar with ⋯ menu, scrollable bottom
   bar, floating "‹ 1 / 5 ›" page indicator, thumbnail strip) and tablet layout (web-style toolbar,
   thumbnail sidebar), status line with item count, zoom and 🔒 badge, empty state with upload button

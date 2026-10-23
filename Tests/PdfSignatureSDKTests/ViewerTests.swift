@@ -59,6 +59,28 @@ final class ViewerTests: XCTestCase {
         XCTAssertEqual(centered.x, Double(size.width) / 2 - centered.width / 2, accuracy: 0.0001)
     }
 
+    func testPositionInputParsing() {
+        XCTAssertEqual(ChromeRules.positionInput(x: "", y: "  "), .center)
+        XCTAssertEqual(ChromeRules.positionInput(x: "50", y: "100"), .position(x: 50, y: 100))
+        XCTAssertEqual(ChromeRules.positionInput(x: " 12,5 ", y: "0"), .position(x: 12.5, y: 0))
+        XCTAssertEqual(ChromeRules.positionInput(x: "50", y: ""), .invalid)
+        XCTAssertEqual(ChromeRules.positionInput(x: "-1", y: "5"), .invalid)
+        XCTAssertEqual(ChromeRules.positionInput(x: "abc", y: "5"), .invalid)
+        XCTAssertEqual(ChromeRules.positionInput(x: "nan", y: "5"), .invalid)
+        XCTAssertEqual(ChromeRules.positionInput(x: "inf", y: "5"), .invalid)
+    }
+
+    func testAskPositionIsOffByDefaultAndExplicitPositionIsClamped() async throws {
+        XCTAssertFalse(PsdkConfig().askPositionOnAdd)
+        let viewer = try await loadedViewer("sample.pdf")
+        let size = try XCTUnwrap(viewer.getPageSize(1))
+        let options = viewer.positioned(.signature, PlaceOptions(), at: PlacementPosition(x: 50, y: 100))
+        XCTAssertEqual(options.x, 50)
+        XCTAssertEqual(options.y, 100)
+        let clamped = viewer.positioned(.signature, PlaceOptions(), at: PlacementPosition(x: 9999, y: 9999))
+        XCTAssertEqual(try XCTUnwrap(clamped.x), Double(size.width) - 160, accuracy: 0.0001)
+    }
+
     func testWebParityScenarios() async throws {
         let config = try json("scenarios.json")
         let tolerance = try XCTUnwrap(config["tolerance"] as? Double)
